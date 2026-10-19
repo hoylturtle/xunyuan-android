@@ -2,7 +2,7 @@ name: Android UI screenshots
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/android-ui.yml', 'scripts/ui_smoke.py']
+    paths: ['.github/workflows/android-ui.yml', 'scripts/ui_smoke.py', 'android/app/src/main/java/**', 'android/app/src/main/AndroidManifest.xml']
   workflow_dispatch:
 permissions:
   contents: write

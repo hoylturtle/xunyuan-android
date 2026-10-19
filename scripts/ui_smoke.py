@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Exercise the real native Android screens and save screenshots + UI trees."""
-import pathlib,subprocess,time,xml.etree.ElementTree as ET,re,os
+import pathlib,subprocess,time,xml.etree.ElementTree as ET,re,os,urllib.request,zipfile,io
 root=pathlib.Path(__file__).resolve().parent.parent
 dest=root/'ui-captures';dest.mkdir(exist_ok=True)
 def adb(*args,**kwargs):return subprocess.check_output(['adb',*args],**kwargs)
@@ -32,7 +32,17 @@ def screens(apk,prefix):
     time.sleep(20);capture(prefix,'search')
     adb('shell','input','keyevent','4')
 
-screens(root/'release-bootstrap/Xunyuan-0.2.0.apk','before')
+try:
+    # Reuse the real baseline already captured from 0.2.0, so its startup updater
+    # cannot interrupt a later comparison after a newer version is released.
+    with urllib.request.urlopen('https://github.com/hoylturtle/xunyuan-android/releases/download/ui-preview/ui-captures.zip',timeout=30) as response:
+        archive=zipfile.ZipFile(io.BytesIO(response.read()))
+    for name in archive.namelist():
+        if pathlib.Path(name).name==name and name.startswith('before-') and name.endswith(('.png','.xml')):
+            (dest/name).write_bytes(archive.read(name))
+except Exception:
+    pass
+if not (dest/'before-home.png').exists():screens(root/'release-bootstrap/Xunyuan-0.2.0.apk','before')
 new=sorted((root/'android/build').glob('Xunyuan-*.apk'))
 assert new
 screens(new[-1],'after')

@@ -23,7 +23,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Xunyuan-iOS-Shortcut
-          path: ios/dist/*
+          path: |
+            ios/dist/Xunyuan.shortcut
+            ios/dist/test-report.json
+            ios/dist/Xunyuan.workflow.json
       - name: Publish independent iOS release
         env:
           GH_TOKEN: ${{ github.token }}
