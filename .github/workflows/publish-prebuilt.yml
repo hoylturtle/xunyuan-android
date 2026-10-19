@@ -1,0 +1,17 @@
+name: Publish verified prebuilt release
+on:
+  push:
+    branches: [main]
+    paths: ['release-bootstrap/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and publish the signed prebuilt APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/publish_prebuilt.py
