@@ -1,8 +1,8 @@
 {
-  "versionCode": 5,
-  "versionName": "0.3.1",
-  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.3.1/Xunyuan-0.3.1.apk",
-  "sha256": "76b4995a139be02a7d47358d40b4217ba1c059b71c86744ee7b0b087950e9700",
-  "apkSize": 221801,
-  "notes": "移除显式扩展搜索开关，连续点击寻源名称6次启用，再连点6次关闭；每次启动默认关闭。关闭后取消搜索并隐藏相关内容。"
+  "versionCode": 6,
+  "versionName": "0.3.2",
+  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.3.2/Xunyuan-0.3.2.apk",
+  "sha256": "8f2decb6c4cf0eba7905c4654817656d18aac9b262c47c24ff308390e47b04cd",
+  "apkSize": 225897,
+  "notes": "默认尝试全部普通来源；自动隐藏明确失效的网盘分享，暂未确认的保留标注；缓存与渐进显示减少重复访问。"
 }
