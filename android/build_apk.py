@@ -23,7 +23,8 @@ def build():
     if not ANDROID.exists() or not (JAVA / 'bin/javac').exists():
         sys.exit('Need Android SDK platform 35, build-tools 35 and JDK 17+. Set ANDROID_SDK_ROOT and JAVA_HOME.')
     for name in ('aapt2', 'd8', 'zipalign', 'apksigner'):
-        (BT / name).chmod(0o755)
+        tool = BT / name
+        if not os.access(tool, os.X_OK): tool.chmod(0o755)
     for folder in ('generated', 'classes', 'dex'):
         target = BUILD / folder
         if target.exists(): shutil.rmtree(target)
