@@ -8,6 +8,8 @@ import org.json.*;
 public final class Result {
     public String title="",url="",pageUrl="",size="",date="",password="",source="",kind="bt";
     public boolean adult;
+    public String linkState="unknown",linkMessage="尚未检查";
+    public long linkCheckedAt=0;
     public static String cloudType(String link) {
         try {
             String host=new URI(link).getHost(); if(host==null)return "";host=host.toLowerCase(Locale.ROOT);
@@ -45,10 +47,11 @@ public final class Result {
     public static Result mergeKnown(Result first,Result later){
         if(first.password.isEmpty()&&!later.password.isEmpty())first.password=later.password;
         first.adult=first.adult||later.adult;
+        if(later.linkCheckedAt>first.linkCheckedAt){first.linkState=later.linkState;first.linkMessage=later.linkMessage;first.linkCheckedAt=later.linkCheckedAt;}
         return first;
     }
     public JSONObject json() throws JSONException {
-        JSONObject j=new JSONObject(); j.put("title",title);j.put("url",url);j.put("pageUrl",pageUrl);j.put("size",size);j.put("date",date);j.put("password",password);j.put("source",source);j.put("kind",kind);j.put("adult",adult);return j;
+        JSONObject j=new JSONObject(); j.put("title",title);j.put("url",url);j.put("pageUrl",pageUrl);j.put("size",size);j.put("date",date);j.put("password",password);j.put("source",source);j.put("kind",kind);j.put("adult",adult);j.put("linkState",linkState);j.put("linkMessage",linkMessage);j.put("linkCheckedAt",linkCheckedAt);return j;
     }
-    public static Result from(JSONObject j){Result r=new Result();r.title=j.optString("title");r.url=j.optString("url");r.pageUrl=j.optString("pageUrl");r.size=j.optString("size");r.date=j.optString("date");r.password=j.optString("password");r.source=j.optString("source");r.kind=j.optString("kind","bt");r.adult=j.optBoolean("adult");return r;}
+    public static Result from(JSONObject j){Result r=new Result();r.title=j.optString("title");r.url=j.optString("url");r.pageUrl=j.optString("pageUrl");r.size=j.optString("size");r.date=j.optString("date");r.password=j.optString("password");r.source=j.optString("source");r.kind=j.optString("kind","bt");r.adult=j.optBoolean("adult");r.linkState=j.optString("linkState","unknown");r.linkMessage=j.optString("linkMessage","尚未检查");r.linkCheckedAt=j.optLong("linkCheckedAt");return r;}
 }

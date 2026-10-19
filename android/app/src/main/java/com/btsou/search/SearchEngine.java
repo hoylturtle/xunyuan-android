@@ -13,20 +13,45 @@ import java.util.regex.*;
 import java.util.zip.GZIPInputStream;
 
 public final class SearchEngine {
-    public interface Listener {void done(Source source,List<Result> results,String error);}
+    public interface Listener {
+        void done(Source source,List<Result> results,String error);
+        default void found(Source source,Result result){}
+        default void removed(Source source){}
+    }
     private final ExecutorService pool=Executors.newFixedThreadPool(5);
-    private final List<Future<?>> jobs=new ArrayList<>();
-    public synchronized void cancel(){for(Future<?> f:jobs)f.cancel(true);jobs.clear();}
+    private final ExecutorService checks=Executors.newFixedThreadPool(6);
+    private final LinkHealth health=new LinkHealth();
+    private final Queue<Future<?>> jobs=new ConcurrentLinkedQueue<>();
+    private final java.util.concurrent.atomic.AtomicInteger generation=new java.util.concurrent.atomic.AtomicInteger();
+    public synchronized void cancel(){generation.incrementAndGet();for(Future<?> f:jobs)f.cancel(true);jobs.clear();((ThreadPoolExecutor)pool).purge();((ThreadPoolExecutor)checks).purge();}
     public synchronized void search(List<Source> sources,String query,int page,boolean allowAdult,Listener listener){
-        cancel();
-        for(Source s:sources) if(allowAdult||!s.adult)jobs.add(pool.submit(()->{
-            try {
+        cancel();final int ticket=generation.get();
+        List<Source> ordered=new ArrayList<>(sources);
+        Set<String> priority=new HashSet<>(Arrays.asList("pansearch","nyaa","3MAG","BTMOVI","ECLSO","ECLZZ"));
+        ordered.sort(Comparator.comparing(s->!priority.contains(s.id)));
+        for(Source s:ordered)if(allowAdult||!s.adult)jobs.add(pool.submit(()->{
+            try{
                 List<Result> list=fetch(s,query,page);list.removeIf(r->!r.visible(allowAdult));
-                if(!Thread.currentThread().isInterrupted())listener.done(s,list,"");
-            }catch(Exception e){if(!Thread.currentThread().isInterrupted())listener.done(s,Collections.emptyList(),message(e));}
+                if(generation.get()!=ticket||Thread.currentThread().isInterrupted())return;
+                if(list.isEmpty()){listener.done(s,Collections.emptyList(),"");return;}
+                List<Result> kept=Collections.synchronizedList(new ArrayList<>());
+                java.util.concurrent.atomic.AtomicInteger remaining=new java.util.concurrent.atomic.AtomicInteger(list.size());
+                for(Result r:list){
+                    Runnable complete=()->{
+                        if(generation.get()!=ticket||Thread.currentThread().isInterrupted())return;
+                        if(!r.kind.equals("bt")){
+                            LinkHealth.Check check=health.check(r.url);r.linkState=check.state;r.linkMessage=check.message;r.linkCheckedAt=check.checkedAt;
+                        }
+                        if(generation.get()!=ticket||Thread.currentThread().isInterrupted())return;
+                        if(!r.linkState.equals("invalid")){kept.add(r);listener.found(s,r);}else listener.removed(s);
+                        if(remaining.decrementAndGet()==0)listener.done(s,new ArrayList<>(kept),"");
+                    };
+                    if(r.kind.equals("bt"))complete.run();else jobs.add(checks.submit(complete));
+                }
+            }catch(Exception e){if(generation.get()==ticket&&!Thread.currentThread().isInterrupted())listener.done(s,Collections.emptyList(),message(e));}
         }));
     }
-    public void close(){cancel();pool.shutdownNow();}
+    public void close(){cancel();pool.shutdownNow();checks.shutdownNow();}
     public static String message(Exception e){
         if(e instanceof SocketTimeoutException)return "连接超时";
         if(e instanceof UnknownHostException)return "域名无法解析";

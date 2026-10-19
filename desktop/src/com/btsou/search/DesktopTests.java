@@ -58,6 +58,7 @@ public final class DesktopTests {
         for(int i=1;i<5;i++)check(!sequence.tap(3_000_000_000L+i*100_000_000L),"post-timeout partial sequence");
         check(sequence.tap(3_500_000_000L),"six new clicks activate after timeout");
         TapSequence newSession=new TapSequence();check(!newSession.tap(0),"new session starts locked");
+        LinkHealthTests.run();
         System.out.println("DESKTOP_TESTS_OK checks="+checks);
     }
 }

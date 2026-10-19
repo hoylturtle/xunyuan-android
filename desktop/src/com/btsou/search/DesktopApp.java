@@ -15,7 +15,7 @@ import org.json.*;
 
 /** Desktop shell; Source, Result and SearchEngine are shared with Android. */
 public final class DesktopApp {
-    public static final String VERSION="0.1.2";
+    public static final String VERSION="0.1.3";
     private static final Color BG=new Color(246,248,245),GREEN=new Color(35,105,80),INK=new Color(30,47,39),MUTED=new Color(103,119,109);
     private final JFrame frame=new JFrame("寻源 · Windows "+VERSION);
     private final SearchEngine engine=new SearchEngine();
@@ -63,7 +63,7 @@ public final class DesktopApp {
         query.addActionListener(e->startSearch());search.addActionListener(e->startSearch());
         filter.addActionListener(e->refilter());onlyWithCode.addActionListener(e->refilter());
         previous.addActionListener(e->{if(displayPage>0){displayPage--;paintResults();}});
-        next.addActionListener(e->{if(loading||!browsing)return;if((displayPage+1)*15<visible.size()){displayPage++;paintResults();}else{displayPage++;loadSourcePage();}});
+        next.addActionListener(e->{if(!browsing||loading&&(displayPage+1)*15>=visible.size())return;if((displayPage+1)*15<visible.size()){displayPage++;paintResults();}else{displayPage++;loadSourcePage();}});
         title.addMouseListener(new MouseAdapter(){public void mouseClicked(MouseEvent e){if(SwingUtilities.isLeftMouseButton(e))onTitleTap();}});
         title.setFocusable(true);title.addKeyListener(new KeyAdapter(){public void keyPressed(KeyEvent e){if(e.getKeyCode()==KeyEvent.VK_SPACE)onTitleTap();}});
         paintResults();
@@ -109,7 +109,7 @@ public final class DesktopApp {
     private JList<Result> configureList(JList<Result> list){list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);list.setFixedCellHeight(100);list.setBackground(Color.WHITE);list.setCellRenderer((view,r,index,selected,focus)->{
         JPanel cell=new JPanel(new BorderLayout(0,7));cell.setBorder(new CompoundBorder(new MatteBorder(0,0,1,0,new Color(230,237,231)),new EmptyBorder(12,16,12,16)));cell.setBackground(selected?new Color(224,240,229):Color.WHITE);
         JLabel heading=new JLabel(r.title);heading.setFont(heading.getFont().deriveFont(Font.BOLD,15f));heading.setForeground(INK);heading.setToolTipText(r.title);cell.add(heading,BorderLayout.NORTH);
-        JLabel meta=new JLabel(r.kind+"  ·  "+r.source+(r.size.isEmpty()?"":"  ·  "+r.size)+(r.kind.equals("bt")?"":"  ·  "+DesktopFilters.codeLabel(r)));meta.setForeground(MUTED);cell.add(meta,BorderLayout.CENTER);
+        JLabel meta=new JLabel(r.kind+"  ·  "+r.source+(r.size.isEmpty()?"":"  ·  "+r.size)+(r.kind.equals("bt")?"":"  ·  "+DesktopFilters.codeLabel(r)+"  ·  "+r.linkMessage));meta.setForeground(MUTED);cell.add(meta,BorderLayout.CENTER);
         JLabel link=new JLabel(r.url);link.setForeground(GREEN);link.setFont(link.getFont().deriveFont(11f));cell.add(link,BorderLayout.SOUTH);return cell;});return list;}
     private void startSearch(){
         String q=query.getText().trim();if(q.isEmpty()){query.requestFocusInWindow();return;}if(!adultEnabled&&Result.adultText(q)){JOptionPane.showMessageDialog(frame,"当前搜索范围不支持该关键词。");return;}
@@ -118,17 +118,21 @@ public final class DesktopApp {
     private boolean accepts(Result r){return DesktopFilters.accepts(r,Objects.toString(filter.getSelectedItem()),onlyWithCode.isSelected(),adultEnabled);}
     private void refilter(){visible.clear();for(Result r:collected.values())if(accepts(r))visible.add(r);displayPage=0;paintResults();status.setText("筛选后 "+visible.size()+" 条；可继续加载下一批");}
     private void loadSourcePage(){
-        List<Source> selected=new ArrayList<>();for(Source s:sources)if(sourceChecks.get(s.id).isSelected()&&(activeAdult||!s.adult))selected.add(s);
+        List<Source> selected=new ArrayList<>();for(Source s:sources)if(sourceChecks.get(s.id).isSelected()&&(activeAdult||!s.adult)&&(sourcePage==0||!s.singlePage))selected.add(s);
         if(selected.isEmpty()){browsing=false;status.setText("请在搜索来源中至少勾选一个匹配的来源");paintResults();return;}
         sourcePage++;int ticket=generation.incrementAndGet();loading=true;pending=selected.size();search.setEnabled(true);status.setText("正在请求来源第 "+sourcePage+" 页…");paintResults();
-        engine.search(selected,activeQuery,sourcePage,activeAdult,(source,results,error)->SwingUtilities.invokeLater(()->{
+        engine.search(selected,activeQuery,sourcePage,activeAdult,new SearchEngine.Listener(){
+            public void removed(Source source){SwingUtilities.invokeLater(()->{if(ticket==generation.get())diagnostics.append(source.name+"：已隐藏1条明确失效的网盘链接\n");});}
+            public void found(Source source,Result r){SwingUtilities.invokeLater(()->{if(ticket!=generation.get())return;collected.merge(r.key(),r,Result::mergeKnown);refreshCollected();status.setText("正在搜索并检查链接 · 已显示 "+visible.size()+" 条");});}
+            public void done(Source source,List<Result> results,String error){SwingUtilities.invokeLater(()->{
             if(ticket!=generation.get())return;
             diagnostics.append(source.name+"："+(error.isEmpty()?results.size()+" 条结果":error)+"\n");
             for(Result r:results)collected.merge(r.key(),r,Result::mergeKnown);
             pending--;if(pending==0){loading=false;visible.clear();for(Result r:collected.values())if(accepts(r))visible.add(r);if(!visible.isEmpty())displayPage=Math.min(displayPage,(visible.size()-1)/15);else displayPage=0;paintResults();status.setText("已收集 "+visible.size()+" 条 · 来源第 "+sourcePage+" 页 · 若无新增，可更换关键词或查看关于页的来源状态");}
-        }));
+        });}});
     }
-    private void paintResults(){resultModel.clear();int start=displayPage*15;for(int i=start;i<Math.min(start+15,visible.size());i++)resultModel.addElement(visible.get(i));pageLabel.setText("第 "+(displayPage+1)+" 页 · 最多15条");previous.setEnabled(!loading&&displayPage>0);next.setEnabled(!loading&&browsing);next.setText((displayPage+1)*15<visible.size()?"下一页 →":"加载下一批 →");}
+    private void refreshCollected(){visible.clear();for(Result r:collected.values())if(accepts(r))visible.add(r);paintResults();}
+    private void paintResults(){resultModel.clear();int start=displayPage*15;for(int i=start;i<Math.min(start+15,visible.size());i++)resultModel.addElement(visible.get(i));pageLabel.setText("第 "+(displayPage+1)+" 页 · 最多15条");previous.setEnabled(displayPage>0);next.setEnabled(browsing&&((displayPage+1)*15<visible.size()||!loading));next.setText((displayPage+1)*15<visible.size()?"下一页 →":"加载下一批 →");}
     private void paintFavorites(){favoriteModel.clear();for(Result r:favorites.values())if(r.visible(adultEnabled))favoriteModel.addElement(r);}
     private void saveSelected(){Result r=resultList.getSelectedValue();if(r!=null){favorites.put(r.key(),r);writeFavorites();paintFavorites();status.setText("已收藏："+r.title);}}
     private void readFavorites(){try{if(Files.exists(dataPath)){JSONArray a=new JSONArray(Files.readString(dataPath));for(int i=0;i<a.length();i++){Result r=Result.from(a.getJSONObject(i));if(Result.safeUrl(r.url))favorites.put(r.key(),r);}}}catch(Exception e){status.setText("收藏读取失败："+e.getMessage());}}
@@ -166,7 +170,7 @@ public final class DesktopApp {
     }
     public static void main(String[] args){
         if(Arrays.asList(args).contains("--self-test")){try{DesktopTests.run();}catch(Exception e){e.printStackTrace();System.exit(1);}return;}
-        System.setProperty("sun.java2d.uiScale.enabled","true");
+        System.setProperty("sun.java2d.uiScale.enabled","true");System.setProperty("java.net.useSystemProxies","true");
         SwingUtilities.invokeLater(()->{try{UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());Font font=new Font("Microsoft YaHei UI",Font.PLAIN,14);for(Object key:Collections.list(UIManager.getDefaults().keys()))if(UIManager.get(key) instanceof javax.swing.plaf.FontUIResource)UIManager.put(key,new javax.swing.plaf.FontUIResource(font));DesktopApp app=new DesktopApp();app.frame.setVisible(true);if(Arrays.asList(args).contains("--smoke-test"))app.smokeTest();}catch(Throwable e){e.printStackTrace();if(!Arrays.asList(args).contains("--smoke-test"))JOptionPane.showMessageDialog(null,"寻源启动失败："+e.getMessage());System.exit(1);}});
     }
 }
