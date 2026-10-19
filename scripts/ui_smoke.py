@@ -3,7 +3,9 @@
 import pathlib,subprocess,time,xml.etree.ElementTree as ET,re,os,urllib.request,zipfile,io
 root=pathlib.Path(__file__).resolve().parent.parent
 dest=root/'ui-captures';dest.mkdir(exist_ok=True)
-def adb(*args,**kwargs):return subprocess.check_output(['adb',*args],**kwargs)
+def adb(*args,**kwargs):
+    kwargs.setdefault('timeout',40)
+    return subprocess.check_output(['adb',*args],**kwargs)
 def dump():
     adb('shell','uiautomator','dump','/sdcard/window.xml')
     return adb('shell','cat','/sdcard/window.xml').decode()
@@ -55,7 +57,7 @@ def screens(apk,prefix):
         tap('来源');assert scroll_has('Sukebei'),'Unlocked source must appear'
         tap('搜索');tap('搜索关键词');adb('shell','input','text','testkeyword')
         title_taps();xml=dump();assert '直连搜索 · 普通模式' in xml and 'testkeyword' not in xml,'Lock must clear query'
-        tap('来源');assert not scroll_has('Sukebei'),'Locked source must be hidden'
+        tap('来源');assert 'Sukebei' not in dump(),'Locked source must be hidden (extended sources sort first when present)'
         tap('搜索');title_taps();tap('我已满18岁，开启')
         adb('shell','am','force-stop','com.btsou.search');adb('shell','am','start','-n','com.btsou.search/.MainActivity');time.sleep(2)
         assert '直连搜索 · 普通模式' in dump(),'Process restart must reset mode'

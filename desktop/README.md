@@ -1,6 +1,6 @@
-# 寻源 Windows 0.1.4 · 单文件便携版
+# 寻源 Windows 0.1.5 · 单文件便携版
 
-适用于 Windows 10/11 x64。只需下载一个 `Xunyuan-Windows-0.1.4.exe`，双击运行，无需安装或另行安装 Java。不再提供安装程序。
+适用于 Windows 10/11 x64。只需下载一个 `Xunyuan-Windows-0.1.5.exe`，双击运行，无需安装或另行安装 Java。不再提供安装程序。
 
 ## 搜索和筛选
 

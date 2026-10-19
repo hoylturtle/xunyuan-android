@@ -21,7 +21,7 @@ iOS 提供独立的「寻源」与「寻源 Plus」捷径，详见 [iOS 使用�
 
 ## Windows 单文件便携版
 
-[下载 Windows EXE](https://github.com/hoylturtle/xunyuan-android/releases/download/windows-v0.1.4/Xunyuan-Windows-0.1.4.exe) · Windows 10/11 x64，单文件双击运行，无需安装 Java。
+[下载 Windows EXE](https://github.com/hoylturtle/xunyuan-android/releases/download/windows-v0.1.5/Xunyuan-Windows-0.1.5.exe) · Windows 10/11 x64，单文件双击运行，无需安装 Java。
 
 支持磁力及百度、夸克、迅雷、115、阿里、其他网盘结果筛选，提取码显示和「只看有提取码」筛选。来源未提供提取码时明确标注；迅雷、115 的搜索结果取决于索引是否收录。详见 [Windows 说明](desktop/README.md)。
 

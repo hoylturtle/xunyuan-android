@@ -20,6 +20,8 @@ public final class LinkHealthTests {
         check(!LinkHealth.classify(url,200,"<table><thead><tr><th>文件名</th><th>文件大小</th></tr></thead><tbody><tr><td>分享已失效修复教程.pdf</td><td>下载</td></tr></tbody></table>",now).invalid(),"file title must not invalidate a share");
         check(!LinkHealth.classify("https://pan.baidu.com.evil.example/s/example",404,"",now).invalid(),"unsupported host not classified");
         check(LinkHealth.classify(url,200,"<div>文件名 文件大小 下载</div>",now).state.equals("reachable"),"file listing is reachable, not download verified");
+        check(!LinkHealth.classify(url,200,"<div style='display: none'>分享已失效</div><main>请输入提取码</main>",now).invalid(),"hidden error template ignored");
+        check(!LinkHealth.classify(url,200,"<input type='password'><aside>分享已取消怎么办</aside>",now).invalid(),"password page FAQ is not deletion proof");
         AtomicInteger calls=new AtomicInteger();LinkHealth cached=new LinkHealth((address,t)->{calls.incrementAndGet();return new LinkHealth.Check("invalid","deleted",t);});
         check(cached.check(url).invalid()&&cached.check(url).invalid()&&calls.get()==1,"invalid status cached");
         AtomicInteger failures=new AtomicInteger();LinkHealth flaky=new LinkHealth((address,t)->{failures.incrementAndGet();throw new java.io.IOException("offline");});

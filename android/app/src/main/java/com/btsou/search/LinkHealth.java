@@ -41,8 +41,11 @@ public final class LinkHealth {
         if(status==401||status==403||status==429||status>=500)return new Check("unknown","访问受限，暂未确认",now);
         if(status==404||status==410)return new Check("invalid","分享地址已失效（HTTP "+status+"）",now);
         if(status!=200)return new Check("unknown","暂未确认（HTTP "+status+"）",now);
-        Document document=Jsoup.parse(html);document.select("script,style,noscript,template").remove();String text=document.text();
+        Document document=Jsoup.parse(html);document.select("script,style,noscript,template,[hidden],[aria-hidden=true]").remove();
+        for(org.jsoup.nodes.Element element:document.select("[style]")){String style=element.attr("style").toLowerCase(Locale.ROOT).replaceAll("\\s+","");if(style.contains("display:none")||style.contains("visibility:hidden"))element.remove();}
+        String text=document.text();
         if(text.matches("(?is).*(验证码|安全验证|人机验证|访问频繁|登录后|請登錄|captcha|just a moment|access denied).*"))return new Check("unknown","需要验证或登录，暂未确认",now);
+        if(!document.select("input[type=password],input[placeholder*=提取码],input[name=pwd]").isEmpty())return new Check("unknown","页面需密码，尚未验证",now);
         // Inspect visible page text only. SPA bundles frequently contain unused error messages.
         boolean fileRows=!document.select("table tbody tr,[data-file-id],.file-list-item,.file-item").isEmpty();
         if(!fileRows&&text.length()<1500&&text.matches("(?s).*(分享(?:的文件)?(?:已经被|已被|已经|已)?(?:取消|删除|刪除|失效|过期|過期)|分享链接(?:已失效|不存在|已过期)|分享的文件不存在|链接(?:不存在|已失效|已过期)|文件已被分享者删除|分享内容已被取消|该分享已取消|来晚了.*分享.*(?:失效|取消)|分享文件已取消).*"))return new Check("invalid","分享页面明确提示失效",now);

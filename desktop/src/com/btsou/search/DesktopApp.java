@@ -15,7 +15,7 @@ import org.json.*;
 
 /** Desktop shell; Source, Result and SearchEngine are shared with Android. */
 public final class DesktopApp {
-    public static final String VERSION="0.1.4";
+    public static final String VERSION="0.1.5";
     private static final Color BG=new Color(246,248,245),GREEN=new Color(35,105,80),INK=new Color(30,47,39),MUTED=new Color(103,119,109);
     private final JFrame frame=new JFrame("寻源 · Windows "+VERSION);
     private final SearchEngine engine=new SearchEngine();
