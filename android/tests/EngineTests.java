@@ -11,6 +11,7 @@ public final class EngineTests {
         Path root=Paths.get(args[0]);List<Source> sources=Source.read(read(root.resolve("android/app/src/main/assets/sources.json")));
         Map<String,Source> by=new HashMap<>();for(Source s:sources)by.put(s.id,s);
         check(sources.size()==34,"source count");
+        check(sources.stream().allMatch(s->s.defaultEnabled),"all configured sources enabled; adult gate remains separate");
         check(by.get("3MAG").url("中文 a&b",1).endsWith("%E4%B8%AD%E6%96%87%20a%26b"),"single-page source must not append 1");
         check(by.get("BTMOVI").url("ubuntu",2).endsWith("ubuntu_rel_2.html"),"legacy paging");
         check(by.get("pansearch").url("python",2).endsWith("keyword=python&offset=10"),"pan paging");

@@ -32,7 +32,8 @@ public final class MainActivity extends Activity {
     private ProgressBar progress;
     private ScrollView resultsScroll;
     private boolean showBackupSources=false;
-    private boolean adult=false,busy=false,destroyed=false;
+    private boolean adult=false,busy=false,destroyed=false,refreshQueued=false;
+    private final android.os.Handler uiHandler=new android.os.Handler(android.os.Looper.getMainLooper());
     private final TapSequence brandTaps=new TapSequence();
     private String screen="搜索",filter="全部",term="",draft="";
     private int generation=0,page=1,pending=0,total=0,success=0,invalidLinks=0;
@@ -54,7 +55,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle out){super.onSaveInstanceState(out);out.putString("draft",query==null?draft:query.getText().toString());out.putString("screen",screen);}
     @Override protected void onResume(){super.onResume();if(updates!=null)updates.resumeInstall();}
-    @Override protected void onDestroy(){destroyed=true;generation++;engine.close();detailPool.shutdownNow();if(updates!=null)updates.close();super.onDestroy();}
+    @Override protected void onDestroy(){destroyed=true;uiHandler.removeCallbacksAndMessages(null);generation++;engine.close();detailPool.shutdownNow();if(updates!=null)updates.close();super.onDestroy();}
     private int dp(float n){return (int)(getResources().getDisplayMetrics().density*n+0.5f);}
     private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
     private TextView text(String value,int sp,int color,boolean bold){TextView v=new TextView(this);v.setText(value);v.setTextSize(sp);v.setTextColor(color);v.setIncludeFontPadding(false);v.setTypeface(Typeface.create(bold?"sans-serif-medium":"sans-serif",bold?Typeface.BOLD:Typeface.NORMAL));v.setLineSpacing(dp(2),1.06f);return v;}
@@ -109,8 +110,8 @@ public final class MainActivity extends Activity {
         InputMethodManager im=(InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(query!=null)im.hideSoftInputFromWindow(query.getWindowToken(),0);
         final boolean adultSnapshot=adult;final int searchPage=page;
         engine.search(list,term,searchPage,adultSnapshot,new SearchEngine.Listener(){
-            public void removed(Source s){runOnUiThread(()->{if(destroyed||generation!=token)return;invalidLinks++;if("搜索".equals(screen))updateResults();});}
-            public void found(Source s,Result r){runOnUiThread(()->{if(destroyed||generation!=token)return;results.merge(r.key(),r,Result::mergeKnown);if("搜索".equals(screen))updateResults();});}
+            public void removed(Source s){runOnUiThread(()->{if(destroyed||generation!=token)return;invalidLinks++;scheduleResults();});}
+            public void found(Source s,Result r){runOnUiThread(()->{if(destroyed||generation!=token)return;results.merge(r.key(),r,Result::mergeKnown);scheduleResults();});}
             public void done(Source s,List<Result> found,String error){runOnUiThread(()->{
             if(destroyed||generation!=token)return;
             pending--;if(error.isEmpty())success++;statuses.put(s.id,error.isEmpty()?"第 "+searchPage+" 页 · "+found.size()+" 条":error);
@@ -123,6 +124,7 @@ public final class MainActivity extends Activity {
     }
     private void stop(){generation++;engine.cancel();busy=false;pending=0;for(String id:new ArrayList<>(statuses.keySet()))if("搜索中".equals(statuses.get(id)))statuses.put(id,"已停止");if("搜索".equals(screen))updateResults();}
     private boolean matches(Result r){return "全部".equals(filter)||("磁力".equals(filter)&&r.kind.equals("bt"))||filter.equals(r.kind)||("其他网盘".equals(filter)&&!Arrays.asList("bt","百度","夸克","阿里").contains(r.kind));}
+    private void scheduleResults(){if(refreshQueued||destroyed)return;refreshQueued=true;uiHandler.postDelayed(()->{refreshQueued=false;if(!destroyed&&"搜索".equals(screen))updateResults();},150);}
     private void updateResults(){
         if(resultsBox==null||!"搜索".equals(screen))return;final int previousY=resultsScroll==null?0:resultsScroll.getScrollY();
         searchButton.setText(busy?"停止":"搜索");progress.setVisibility(busy?View.VISIBLE:View.GONE);progress.setMax(Math.max(1,total));progress.setProgress(total-pending);
