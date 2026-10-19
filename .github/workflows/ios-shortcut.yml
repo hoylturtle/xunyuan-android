@@ -19,17 +19,21 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y libplist-2.0-4
+          if [ ! -s 'ios/prebuilt/寻源.shortcut' ] || [ ! -s 'ios/prebuilt/寻源 Plus.shortcut' ]; then
+            python3 ios/sign_via_hubsign.py
+          fi
           python3 ios/verify_signed.py
       - uses: actions/upload-artifact@v4
         with:
           name: Xunyuan-iOS-Shortcut
           path: |
-            ios/dist/Xunyuan.shortcut
+            ios/dist/寻源.shortcut
+            ios/dist/寻源 Plus.shortcut
             ios/dist/test-report.json
-            ios/dist/Xunyuan.workflow.json
+            ios/dist/*.workflow.json
       - name: Publish independent iOS release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view ios-v0.1.0 > /dev/null 2>&1 || gh release create ios-v0.1.0 --title '寻源 iOS 快捷指令 0.1.0' --notes-file ios/RELEASE_NOTES.md --latest=false
-          gh release upload ios-v0.1.0 ios/dist/Xunyuan.shortcut ios/README.md --clobber
+          gh release view ios-v0.2.0 > /dev/null 2>&1 || gh release create ios-v0.2.0 --title '寻源 iOS 快捷指令 0.2.0 · 双版本' --notes-file ios/RELEASE_NOTES.md --latest=false
+          gh release upload ios-v0.2.0 ios/dist/寻源.shortcut "ios/dist/寻源 Plus.shortcut" ios/README.md --clobber

@@ -1,43 +1,53 @@
-# 寻源 · iOS 快捷指令
+# 寻源 · iOS 快捷指令双版本
 
-保留安卓 APP，另提供原生 iPhone 快捷指令。无服务器，不需要 Scriptable 等额外应用。
+安卓 APP 继续保留，iPhone 另提供两个独立的原生快捷指令。无需自建服务器，不需要 Scriptable 等额外应用。
 
-## 下载与导入
+| 名称与文件 | 搜索范围 |
+|---|---|
+| **寻源.shortcut** | 普通版，不含成人来源或开启入口，过滤已识别的成人关键词和结果。 |
+| **寻源 Plus.shortcut** | 扩展版，可搜索成人来源，运行前确认已满18岁；也可查询公开网盘索引。 |
 
-[打开快捷指令发布页面](https://github.com/hoylturtle/xunyuan-android/releases/tag/ios-v0.1.0)，用 iPhone Safari 下载 `Xunyuan.shortcut`，在「文件」中打开，按系统提示添加到「快捷指令」。可以重命名为「寻源」并添加到主屏幕。
+两份文件独立导入。普通版依赖关键词过滤，不能保证识别所有未标注的成人内容；Plus 不启用这类过滤。
 
-发布文件通过 RoutineHub 的 HubSign 服务签名，并使用开源 shortcut-sign 校验签名和提取动作，确认 194 个动作与生成源文件一致。签名服务只接收已公开的工作流，不接收用户关键词、Apple ID 或网盘账号。`Xunyuan.unsigned.shortcut` 为开发用原始文件，不应作为可直接安装的成品分发。没有生成 iCloud 分享链接。
+## 导入与使用
 
-## 使用
+[打开双版本发布页](https://github.com/hoylturtle/xunyuan-android/releases/tag/ios-v0.2.0)。在 iPhone Safari 下载所需文件，在「文件」中打开，按提示添加到「快捷指令」，也可添加到主屏幕。
 
-1. 每次运行先选择成人搜索状态，默认关闭；开启需要确认已满 18 岁，只影响本次运行。
-2. 输入关键词，选择全部网盘、百度、夸克、阿里，或磁力。
-3. 选择第 1、2 或 3 页。
-4. 从结果列表选择资源，再选择打开链接、复制链接与提取码，或仅复制链接。
+1. 输入关键词。
+2. 选择全部网盘、百度、夸克、阿里，或磁力来源。
+3. 选择第1、2或3页。
+4. 在结果列表选择资源，打开链接或复制链接／提取码。
 
-网盘通过 PanSearch 的公开分享索引返回结果，磁力通过 Nyaa 查询；开启成人搜索时，磁力改用 Sukebei。成人专用来源未以成人关键词进行联网检索验证。默认关闭时使用关键词过滤相关输入及结果，可能漏判或误判。
+普通版磁力来源为 Nyaa，Plus 磁力来源为 Sukebei。网盘通过 PanSearch 的公开分享索引获取链接，不搜索私人网盘文件。Sukebei 尚未通过成人关键词的联网可用性测试。
 
-网盘打开使用 HTTPS 分享链接。**是否唤起对应 APP 由 iOS Universal Links、网盘 APP 及用户的打开偏好决定**，不能像安卓一样强制指定应用包。磁链需要已安装支持磁链的客户端；没有时请使用复制功能。提取码能从资源行识别时，打开前会复制。
+网盘使用 HTTPS 分享链接打开，能否唤起 APP 由 iOS Universal Links、网盘应用和用户偏好决定，不能像安卓一样强制指定应用。磁链需要支持它的客户端，没有时请复制使用。识别到提取码时，打开前会复制。
 
-快捷指令首次访问站点、打开链接或使用剪贴板时可能要求授权。网站要求验证码、网络失败时，系统可能直接显示动作错误；更换网络或稍后重试。没有搜索历史、收藏或批量并发搜索；不直接搜索私人网盘文件。
+首次访问来源、打开链接或使用剪贴板时，iOS 可能要求授权。遇到验证码或网络失败时，可能直接显示系统动作错误；请更换网络或稍后重试。此版本没有搜索历史、收藏或并发聚合功能。
 
-## 验证边界
+## 签名与验证
 
-生成器对动作、变量、UTF-16 占位符及控制流进行结构检查，并以真实抓取样本验证网盘和磁力正则。检查结果见构建产物 `test-report.json`。
+发布前通过 RoutineHub HubSign 签名，并用 shortcut-sign 校验签名、提取工作流，逐项核对普通版168个动作、Plus版155个动作与源文件一致。只向签名服务发送公开工作流，不发送用户关键词、Apple ID 或网盘账号。
 
-签名校验成功只说明文件签名可验证、动作未发生变化，**不等于已在 iPhone 导入并执行成功**。本项目尚未进行 iPhone 真机测试，首次使用请用普通关键词测试。
+结构检查覆盖变量、UTF-16占位符、控制流、版本分离，以及真实页面样本解析。**尚未在 iPhone 真机导入并执行**，签名校验不等于真机功能验证。首次使用请用普通关键词测试。
 
-## 开发与签名
+## 开发
 
 ```sh
 python3 ios/build_shortcut.py
 python3 ios/test_shortcut.py
-# 在 macOS 上执行：
-shortcuts sign --mode anyone --input ios/dist/Xunyuan.unsigned.shortcut --output ios/dist/Xunyuan.shortcut
+python3 ios/sign_via_hubsign.py
+python3 ios/verify_signed.py
 ```
 
-macOS 官方签名要求登录 iCloud；GitHub 的 macOS runner 未登录，不能直接使用。本次已采用 [Cherri 使用的 HubSign 公共签名流程](https://github.com/electrikmilk/cherri/blob/main/signing.go)，随后用 [shortcut-sign](https://github.com/0xilis/shortcut-sign) 验证签名并逐项核对工作流。
+有已登录 iCloud 的 Mac 时，也可使用官方签名：
 
-`.github/workflows/ios-shortcut.yml` 负责重新生成、检查及发布已签名文件。修改动作后需要重新签名，并更新 `ios/prebuilt/Xunyuan.shortcut`，否则流程会拒绝发布。iOS 发布使用独立的 `ios-v*` 标签，并设置 `--latest=false`，避免影响安卓应用的 `releases/latest/download/update.json`。
+```sh
+shortcuts sign --mode anyone --input ios/dist/Xunyuan.unsigned.shortcut --output ios/prebuilt/寻源.shortcut
+shortcuts sign --mode anyone --input ios/dist/Xunyuan-Plus.unsigned.shortcut --output 'ios/prebuilt/寻源 Plus.shortcut'
+```
 
-参考：[Apple 快捷指令命令行与签名说明](https://support.apple.com/guide/shortcuts-mac/run-shortcuts-from-the-command-line-apd455c82f02/mac)。
+GitHub 的 macOS runner 未登录 iCloud，不能直接使用官方签名。本次采用 [Cherri 的 HubSign 流程](https://github.com/electrikmilk/cherri/blob/main/signing.go)，再用 [shortcut-sign](https://github.com/0xilis/shortcut-sign) 验证签名及动作一致性。修改动作后必须重新签名，否则发布检查会拒绝上传。
+
+iOS 使用独立 `ios-v*` 标签和 `--latest=false`，不影响安卓应用的在线更新地址。未生成 iCloud 分享链接；`*.unsigned.shortcut` 仅供开发，不是可安装成品。
+
+[Apple 的命令行与签名说明](https://support.apple.com/guide/shortcuts-mac/run-shortcuts-from-the-command-line-apd455c82f02/mac)。

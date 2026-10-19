@@ -21,7 +21,7 @@ def token(*parts):
     return {'Value':{'string':value,'attachmentsByRange':refs},'WFSerializationType':'WFTextTokenString'}
 
 class Builder:
-    def __init__(self):self.actions=[]
+    def __init__(self,allow_adult=False):self.actions=[];self.allow_adult=allow_adult
     def uid(self):return str(uuid.uuid5(uuid.NAMESPACE_URL,'https://github.com/hoylturtle/xunyuan-android/ios/'+str(len(self.actions)))).upper()
     def add(self,name,**params):
         uid=self.uid();params['UUID']=uid;self.actions.append({'WFWorkflowActionIdentifier':'is.workflow.actions.'+name,'WFWorkflowActionParameters':params});return output(uid)
@@ -49,24 +49,24 @@ class Builder:
     def stop(self,message):self.add('showresult',Text=message);self.add('exit')
     def add_safe_result(self,label,link,source):
         candidate=self.text(label,'\n',link);self.set('候选结果',candidate)
-        allowed=self.begin_if(var('成人搜索'),2,0)
-        self.add('appendvariable',WFVariableName='搜索结果',WFInput=attach(var('候选结果')))
-        self.otherwise(allowed)
-        clean=self.begin_if(self.count(self.match(ADULT,source)),0,1)
-        self.add('appendvariable',WFVariableName='搜索结果',WFInput=attach(var('候选结果')))
-        self.end_if(clean);self.end_if(allowed)
+        if self.allow_adult:
+            self.add('appendvariable',WFVariableName='搜索结果',WFInput=attach(var('候选结果')))
+        else:
+            clean=self.begin_if(self.count(self.match(ADULT,source)),0,1)
+            self.add('appendvariable',WFVariableName='搜索结果',WFInput=attach(var('候选结果')))
+            self.end_if(clean)
 
-def build():
-    b=Builder();b.add('comment',WFCommentActionText='寻源 iOS 0.1.0：手机直连，无服务器。来源 PanSearch / Nyaa；成人开关每次运行默认关闭。可能漏判，来源可能失效。选择结果后可复制或尝试打开；网盘 Universal Link 是否唤起应用由 iOS 与网盘应用决定。')
-    b.literal('成人搜索','0')
-    g=b.menu('成人资源搜索（每次默认关闭）',['关闭（默认）','开启（仅限已满18岁）'])
-    b.case(g,'关闭（默认）');b.literal('成人搜索','0')
-    b.case(g,'开启（仅限已满18岁）');b.add('alert',WFAlertActionTitle='确认已满18岁',WFAlertActionMessage='确认后，本次运行允许成人关键词，并在磁力模式使用成人来源。取消则停止本次运行。',WFAlertActionCancelButtonShown=True);b.literal('成人搜索','1');b.end_menu(g)
+def build(variant='standard'):
+    allow_adult=variant=='adult';shortcut_name='寻源 Plus' if allow_adult else '寻源'
+    b=Builder(allow_adult);b.add('comment',WFCommentActionText='寻源 iOS 0.2.0：手机直连，无服务器。普通版过滤已识别成人关键词且不含成人来源；成人版单独发布，仅供成年人使用。分类可能误判，来源可能失效。选择结果后可复制或尝试打开；网盘 Universal Link 是否唤起应用由 iOS 与网盘应用决定。')
+    if allow_adult:
+        b.add('alert',WFAlertActionTitle='寻源 Plus · 确认已满18岁',WFAlertActionMessage='此版本允许成人关键词与相关来源。仅供年满18岁的用户使用，取消则停止本次运行。',WFAlertActionCancelButtonShown=True)
     q=b.add('ask',WFAskActionPrompt='寻源：输入资源关键词',WFInputType='Text',WFAskActionDefaultAnswer='');q=b.replace(r'^\s+|\s+$',q);b.set('关键词',q)
     empty=b.begin_if(q,101);b.stop('关键词不能为空。');b.end_if(empty)
-    off=b.begin_if(var('成人搜索'),4,'0');blocked=b.begin_if(b.count(b.match(ADULT,q)),2,0);b.stop('成人搜索当前关闭。请重新运行并手动开启。');b.end_if(blocked);b.end_if(off)
+    if not allow_adult:
+        blocked=b.begin_if(b.count(b.match(ADULT,q)),2,0);b.stop('寻源普通版不支持成人资源搜索。');b.end_if(blocked)
     encoded=b.add('urlencode',WFInput=attach(q),WFEncodeMode='Encode');b.set('编码关键词',encoded)
-    sources=list(HOSTS)+['磁力（Nyaa / 成人来源）'];g=b.menu('选择搜索来源',sources)
+    sources=list(HOSTS)+(['磁力（成人来源）'] if allow_adult else ['磁力（Nyaa）']);g=b.menu('选择搜索来源',sources)
     for name,host in HOSTS.items():
         b.case(g,name);b.literal('模式','pan');b.literal('网盘匹配',r'(?<=href=")https?://'+host+r'/s/[^"<>\s]+')
     b.case(g,sources[-1]);b.literal('模式','bt');b.end_menu(g)
@@ -94,7 +94,7 @@ def build():
     b.add_safe_result(var('结果标题'),var('资源链接'),var('资源行'))
     b.end_repeat(perlink);b.end_if(has);b.end_repeat(inner);b.end_repeat(repeat)
     b.otherwise(mode)
-    adult=b.begin_if(var('成人搜索'),2,0);b.literal('磁力源','https://sukebei.nyaa.si/?f=0&c=0_0&q=');b.otherwise(adult);b.literal('磁力源','https://nyaa.si/?f=0&c=0_0&q=');b.end_if(adult)
+    b.literal('磁力源','https://sukebei.nyaa.si/?f=0&c=0_0&q=' if allow_adult else 'https://nyaa.si/?f=0&c=0_0&q=')
     url=b.text(var('磁力源'),var('编码关键词'),'&p=',var('页码'));b.set('搜索地址',url)
     page=b.add('downloadurl',WFURL=token(url),WFHTTPMethod='GET');html=b.add('detect.text',WFInput=attach(page));rows=b.match(ROW_PATTERN,html)
     repeat=b.repeat(rows);b.set('磁力行',b.text(var('Repeat Item')))
@@ -111,11 +111,12 @@ def build():
     b.add('openurl',WFInput=token(var('已选链接')))
     b.case(g,'复制链接与提取码');b.add('setclipboard',WFInput=attach(var('已选结果')),WFLocalOnly=True);b.add('showresult',Text='已复制结果和提取码。')
     b.case(g,'复制磁链／网盘地址');b.add('setclipboard',WFInput=attach(var('已选链接')),WFLocalOnly=True);b.add('showresult',Text='已复制链接。');b.end_menu(g)
-    workflow={'WFWorkflowName':'寻源','WFWorkflowActions':b.actions,'WFWorkflowClientVersion':'2302.0.4','WFWorkflowClientRelease':'18.0','WFWorkflowMinimumClientVersion':900,'WFWorkflowMinimumClientVersionString':'900','WFWorkflowIcon':{'WFWorkflowIconStartColor':431817727,'WFWorkflowIconGlyphNumber':61440},'WFWorkflowTypes':[],'WFWorkflowInputContentItemClasses':[],'WFWorkflowOutputContentItemClasses':[],'WFWorkflowImportQuestions':[],'WFWorkflowHasOutputFallback':False,'WFQuickActionSurfaces':[]}
+    workflow={'WFWorkflowName':shortcut_name,'WFWorkflowActions':b.actions,'WFWorkflowClientVersion':'2302.0.4','WFWorkflowClientRelease':'18.0','WFWorkflowMinimumClientVersion':900,'WFWorkflowMinimumClientVersionString':'900','WFWorkflowIcon':{'WFWorkflowIconStartColor':431817727,'WFWorkflowIconGlyphNumber':61440},'WFWorkflowTypes':[],'WFWorkflowInputContentItemClasses':[],'WFWorkflowOutputContentItemClasses':[],'WFWorkflowImportQuestions':[],'WFWorkflowHasOutputFallback':False,'WFQuickActionSurfaces':[]}
     dist=ROOT/'dist';dist.mkdir(exist_ok=True)
-    (dist/'Xunyuan.unsigned.shortcut').write_bytes(plistlib.dumps(workflow,fmt=plistlib.FMT_BINARY,sort_keys=False))
-    (dist/'Xunyuan.workflow.json').write_text(json.dumps(workflow,ensure_ascii=False,indent=2)+'\n')
-    print('Built native workflow:',len(b.actions),'actions')
+    stem='Xunyuan-Plus' if allow_adult else 'Xunyuan'
+    (dist/(stem+'.unsigned.shortcut')).write_bytes(plistlib.dumps(workflow,fmt=plistlib.FMT_BINARY,sort_keys=False))
+    (dist/(stem+'.workflow.json')).write_text(json.dumps(workflow,ensure_ascii=False,indent=2)+'\n')
+    print('Built',shortcut_name,'native workflow:',len(b.actions),'actions')
     return workflow
 
-if __name__=='__main__':build()
+if __name__=='__main__':build();build('adult')

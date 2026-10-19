@@ -13,37 +13,44 @@ def check(ok,message):
     checks+=1
     if not ok:raise AssertionError(message)
 
-seen=set();groups=[];counts=collections.Counter()
-def walk(value):
-    if isinstance(value,dict):
-        if value.get('WFSerializationType')=='WFTextTokenString':
-            v=value['Value'];encoded=v['string'].encode('utf-16-le');ranges=v['attachmentsByRange'];check(v['string'].count('\ufffc')==len(ranges),'placeholder count')
-            for key,ref in ranges.items():
-                pos,length=map(int,re.findall(r'\d+',key));check(length==1 and encoded[pos*2:pos*2+2]==b'\xfc\xff','UTF16 attachment offset')
-        if value.get('Type')=='ActionOutput':check(value.get('OutputUUID') in seen,'forward or missing output reference')
-        if value.get('Type')=='Variable' and value.get('VariableName','').startswith('Repeat Item'):
-            depth=sum(1 for name,_ in groups if name.endswith('repeat.each'))
-            expected='Repeat Item'+(' '+str(depth) if depth>1 else '')
-            check(value['VariableName']==expected,'correct nested Repeat Item level')
-        for v in value.values():walk(v)
-    elif isinstance(value,list):
-        for v in value:walk(v)
+counts=collections.Counter()
+def validate(workflow):
+    actions=workflow['WFWorkflowActions'];seen=set();groups=[]
+    def walk(value):
+        if isinstance(value,dict):
+            if value.get('WFSerializationType')=='WFTextTokenString':
+                v=value['Value'];encoded=v['string'].encode('utf-16-le');ranges=v['attachmentsByRange'];check(v['string'].count('\ufffc')==len(ranges),'placeholder count')
+                for key,ref in ranges.items():
+                    pos,length=map(int,re.findall(r'\d+',key));check(length==1 and encoded[pos*2:pos*2+2]==b'\xfc\xff','UTF16 attachment offset')
+            if value.get('Type')=='ActionOutput':check(value.get('OutputUUID') in seen,'forward or missing output reference')
+            if value.get('Type')=='Variable' and value.get('VariableName','').startswith('Repeat Item'):
+                depth=sum(1 for name,_ in groups if name.endswith('repeat.each'))
+                expected='Repeat Item'+(' '+str(depth) if depth>1 else '')
+                check(value['VariableName']==expected,'correct nested Repeat Item level')
+            for v in value.values():walk(v)
+        elif isinstance(value,list):
+            for v in value:walk(v)
+    
+    for a in actions:
+        ident=a['WFWorkflowActionIdentifier'];p=a['WFWorkflowActionParameters'];uid=p['UUID'];check(uid not in seen,'unique UUID');walk(p)
+        if 'WFControlFlowMode' in p:
+            mode=p['WFControlFlowMode'];g=p['GroupingIdentifier']
+            if mode==0:groups.append((ident,g))
+            else:
+                check(bool(groups) and groups[-1]==(ident,g),'properly nested control blocks')
+                if mode==2:groups.pop()
+        if ident.endswith('text.match'):check('text' in p and 'WFInput' not in p,'Match Text source key')
+        if ident.endswith('text.match.getgroup'):check('matches' in p,'Get Group source key')
+        if ident.endswith('conditional')and p['WFControlFlowMode']==0:check(p['WFInput'].get('Type')=='Variable','If input wrapper')
+        if ident.endswith('choosefromlist'):check(isinstance(p['WFChooseFromListActionSelectMultiple'],bool),'boolean selection')
+        seen.add(uid)
+    check(not groups,'all groups closed')
 
-for a in actions:
-    ident=a['WFWorkflowActionIdentifier'];p=a['WFWorkflowActionParameters'];uid=p['UUID'];check(uid not in seen,'unique UUID');walk(p)
-    if 'WFControlFlowMode' in p:
-        mode=p['WFControlFlowMode'];g=p['GroupingIdentifier']
-        if mode==0:groups.append((ident,g))
-        else:
-            check(bool(groups) and groups[-1]==(ident,g),'properly nested control blocks')
-            if mode==2:groups.pop()
-    if ident.endswith('text.match'):check('text' in p and 'WFInput' not in p,'Match Text source key')
-    if ident.endswith('text.match.getgroup'):check('matches' in p,'Get Group source key')
-    if ident.endswith('conditional')and p['WFControlFlowMode']==0:check(p['WFInput'].get('Type')=='Variable','If input wrapper')
-    if ident.endswith('choosefromlist'):check(isinstance(p['WFChooseFromListActionSelectMultiple'],bool),'boolean selection')
-    seen.add(uid)
-check(not groups,'all groups closed')
+validate(workflow)
 check(plistlib.loads((root/'dist/Xunyuan.unsigned.shortcut').read_bytes())==workflow,'binary plist round trip')
+check(workflow['WFWorkflowName']=='寻源','standard product name')
+standard_source=json.dumps(workflow,ensure_ascii=False);check('sukebei.nyaa.si' not in standard_source,'no adult endpoint in standard workflow');check('成人搜索（每次默认关闭）' not in standard_source,'no adult toggle in standard workflow')
+adult_workflow=build('adult');validate(adult_workflow);check(adult_workflow['WFWorkflowName']=='寻源 Plus','adult product name');check('sukebei.nyaa.si' in json.dumps(adult_workflow),'adult endpoint only in adult workflow');check(any('确认已满18岁' in a['WFWorkflowActionParameters'].get('WFAlertActionTitle','') for a in adult_workflow['WFWorkflowActions']),'adult age confirmation')
 
 fixtures=root.parent/'research/probes'
 page=(fixtures/'pansearch.txt').read_text();data=json.loads(re.search(JSON_PATTERN,page).group(1))['props']['pageProps']['data']['data']
@@ -61,6 +68,6 @@ for row in rows:
 check(re.search(ADULT,'SSIS-123 sample') is not None,'adult catalogue flagged')
 check(re.search(ADULT,'Python basics and Java development') is None,'normal search allowed')
 bad='https://pan.baidu.com.evil.example/s/fake';check(re.search(r'https?://'+HOSTS['全部网盘']+r'/s/',bad)is None,'lookalike host rejected')
-report={'checks':checks,'actionCount':len(actions),'fixtureCloudLinkCounts':dict(counts),'fixtureMagnetResults':len(rows),'iphoneRuntimeTested':False}
+report={'checks':checks,'actionCounts':{'standard':len(actions),'adult':len(adult_workflow['WFWorkflowActions'])},'fixtureCloudLinkCounts':dict(counts),'fixtureMagnetResults':len(rows),'iphoneRuntimeTested':False}
 (root/'dist/test-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps(report,ensure_ascii=False))
