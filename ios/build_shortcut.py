@@ -58,7 +58,7 @@ class Builder:
 
 def build(variant='standard'):
     allow_adult=variant=='adult';shortcut_name='寻源 Plus' if allow_adult else '寻源'
-    b=Builder(allow_adult);b.add('comment',WFCommentActionText='寻源 iOS 0.2.0：手机直连，无服务器。普通版过滤已识别成人关键词且不含成人来源；成人版单独发布，仅供成年人使用。分类可能误判，来源可能失效。选择结果后可复制或尝试打开；网盘 Universal Link 是否唤起应用由 iOS 与网盘应用决定。')
+    b=Builder(allow_adult);b.add('comment',WFCommentActionText='寻源 iOS 0.2.0：手机直连，无服务器。普通版过滤已识别成人关键词且不含成人来源；Plus 版单独发布，仅供成年人使用。分类可能误判，来源可能失效。选择结果后可复制或尝试打开；网盘 Universal Link 是否唤起应用由 iOS 与网盘应用决定。')
     if allow_adult:
         b.add('alert',WFAlertActionTitle='寻源 Plus · 确认已满18岁',WFAlertActionMessage='此版本允许成人关键词与相关来源。仅供年满18岁的用户使用，取消则停止本次运行。',WFAlertActionCancelButtonShown=True)
     q=b.add('ask',WFAskActionPrompt='寻源：输入资源关键词',WFInputType='Text',WFAskActionDefaultAnswer='');q=b.replace(r'^\s+|\s+$',q);b.set('关键词',q)
