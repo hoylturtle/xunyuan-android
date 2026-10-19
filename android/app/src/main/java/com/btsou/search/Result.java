@@ -17,7 +17,8 @@ public final class Result {
             if(host.equals("drive.uc.cn"))return "UC";
             if(host.equals("cloud.189.cn"))return "天翼";
             if(host.equals("www.123pan.com")||host.equals("www.123684.com")||host.equals("www.123865.com")||host.equals("www.123912.com")||host.equals("www.123pan.cn"))return "123";
-            if(host.equals("115.com"))return "115";
+            if(host.equals("pan.xunlei.com"))return "迅雷";
+            if(host.equals("115.com")||host.equals("115cdn.com"))return "115";
         } catch(Exception ignored){}
         return "";
     }
@@ -40,6 +41,12 @@ public final class Result {
     private static final Pattern ADULT=Pattern.compile("(?i)(成人|色情|无码|無碼|有码|有碼|性爱|性愛|性交|裸体|裸體|巨乳|爆乳|中出|内射|內射|口交|肛交|无码|麻豆|18禁|18\\+|hentai|porn|xxx|nsfw|jav\\b|\\bsex\\b|\\b(?:SSIS|SSNI|STARS|IPX|IPZZ|MIDE|MIDV|FSDSS|JUFE|JUQ|MEYD|DASS|ABW|IPTD|HEYZO)[-_ ]?\\d{2,})");
     public static boolean adultText(String text){return ADULT.matcher(text).find();}
     public boolean visible(boolean allowAdult){return allowAdult||(!adult&&!adultText(title));}
+    /** Merge duplicate links without losing a code found by a later source. */
+    public static Result mergeKnown(Result first,Result later){
+        if(first.password.isEmpty()&&!later.password.isEmpty())first.password=later.password;
+        first.adult=first.adult||later.adult;
+        return first;
+    }
     public JSONObject json() throws JSONException {
         JSONObject j=new JSONObject(); j.put("title",title);j.put("url",url);j.put("pageUrl",pageUrl);j.put("size",size);j.put("date",date);j.put("password",password);j.put("source",source);j.put("kind",kind);j.put("adult",adult);return j;
     }

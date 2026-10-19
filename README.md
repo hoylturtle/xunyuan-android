@@ -19,6 +19,12 @@ Android 手机直连的磁力与公开网盘分享搜索工具。无需自建中
 
 iOS 提供独立的「寻源」与「寻源 Plus」捷径，详见 [iOS 使用说明](ios/README.md)。
 
+## Windows 单文件便携版
+
+[下载 Windows EXE](https://github.com/hoylturtle/xunyuan-android/releases/download/windows-v0.1.1/Xunyuan-Windows-0.1.1.exe) · Windows 10/11 x64，单文件双击运行，无需安装 Java。
+
+支持磁力及百度、夸克、迅雷、115、阿里、其他网盘结果筛选，提取码显示和「只看有提取码」筛选。来源未提供提取码时明确标注；迅雷、115 的搜索结果取决于索引是否收录。详见 [Windows 说明](desktop/README.md)。
+
 ## 在线更新
 
 「设置 → 检查应用更新」读取 GitHub Releases 最新版本的 `update.json`。启动时也会每天自动检查一次，可关闭自动检查。不会静默安装。

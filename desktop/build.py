@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Build a standalone Windows app and per-user EXE installer with the JDK."""
+"""Build a single-file portable Windows EXE with the JDK."""
 import argparse,hashlib,os,pathlib,shutil,subprocess,sys
 root=pathlib.Path(__file__).resolve().parent.parent
 out=root/'desktop/build';classes=out/'classes';app=out/'app'
-VERSION='0.1.0'
+VERSION='0.1.1'
 
 def run(*args):
     subprocess.run([str(x) for x in args],check=True,cwd=root)
@@ -41,13 +41,18 @@ def main():
     run(tool('jpackage'),'--type','app-image','--name','Xunyuan','--app-version',VERSION,'--vendor','Xunyuan','--input',app,'--main-jar','Xunyuan.jar','--main-class','com.btsou.search.DesktopApp','--dest',image,'--add-modules','java.desktop,java.logging,java.naming,java.xml,jdk.crypto.ec','--java-options','-Dfile.encoding=UTF-8','--jlink-options','--strip-debug --no-header-files --no-man-pages')
     # Console launcher exercises the exact packaged runtime/classes before publication.
     run(image/'Xunyuan/runtime/bin/java.exe','-jar',image/'Xunyuan/app/Xunyuan.jar','--self-test')
-    run(tool('jpackage'),'--type','exe','--name','Xunyuan','--app-version',VERSION,'--vendor','Xunyuan','--app-image',image/'Xunyuan','--dest',installers,'--win-per-user-install','--win-dir-chooser','--win-menu','--win-shortcut')
-    generated=installers/('Xunyuan-'+VERSION+'.exe');target=installers/('Xunyuan-Windows-'+VERSION+'-Setup.exe')
-    generated.replace(target)
-    shutil.make_archive(str(installers/('Xunyuan-Windows-'+VERSION+'-Portable')),'zip',image,'Xunyuan')
+    # Bundle the app image into a single, non-installing Windows executable.
+    payload=pathlib.Path(shutil.make_archive(str(out/'payload'),'zip',image))
+    launcher=out/'PortableLauncher.cs'
+    launcher.write_text((root/'desktop/PortableLauncher.cs').read_text().replace('PAYLOAD_SHA256',hashlib.sha256(payload.read_bytes()).hexdigest()),encoding='utf-8-sig')
+    csc=pathlib.Path(os.environ['WINDIR'])/'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
+    target=installers/('Xunyuan-Windows-'+VERSION+'.exe')
+    run(csc,'/nologo','/target:winexe','/platform:x64','/optimize+', '/out:'+str(target),'/win32manifest:'+str(root/'desktop/portable.manifest'),'/reference:System.Windows.Forms.dll','/reference:System.IO.Compression.dll','/reference:System.IO.Compression.FileSystem.dll','/resource:'+str(payload)+',payload.zip',launcher)
+    # Test the actual single EXE, including extraction and its bundled runtime.
+    run(target,'--self-test')
     lines=[]
     for p in sorted(installers.iterdir()):
-        if p.suffix in ['.exe','.zip']:lines.append(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name)
+        if p.suffix == '.exe':lines.append(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name)
     (installers/'SHA256SUMS.txt').write_text('\n'.join(lines)+'\n')
     print('Windows packages:',installers)
 

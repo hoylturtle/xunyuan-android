@@ -127,7 +127,7 @@ public final class SearchEngine {
             }
         }
         LinkedHashMap<String,Result> dedup=new LinkedHashMap<>();
-        for(Result r:out)if(!r.title.isEmpty()&&Result.safeUrl(r.url)){r.adult=r.adult||Result.adultText(r.title);dedup.putIfAbsent(r.key(),r);}
+        for(Result r:out)if(!r.title.isEmpty()&&Result.safeUrl(r.url)){r.adult=r.adult||Result.adultText(r.title);dedup.merge(r.key(),r,Result::mergeKnown);}
         return new ArrayList<>(dedup.values());
     }
     private static String ref(JSONArray pool,JSONObject obj,String key){int index=obj.optInt(key,-1);return index>=0&&index<pool.length()?pool.optString(index):"";}
