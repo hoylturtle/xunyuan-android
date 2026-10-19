@@ -19,12 +19,17 @@
   "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39272984613",
   "hiddenToggleEmulatorTested": true,
   "windows": {
-    "version": "0.1.5",
+    "version": "0.1.6",
     "singleFile": true,
     "checks": 460,
     "hiddenToggleUiTested": true,
-    "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/windows-v0.1.5",
-    "linkHealthChecks": 40
+    "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/windows-v0.1.6",
+    "linkHealthChecks": 40,
+    "exeBytes": 17935360,
+    "previousExeBytes": 26690560,
+    "sizeReductionPercent": 32.8,
+    "brandedIconVerified": true,
+    "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39275620919"
   },
   "linkHealthChecks": 40,
   "defaultOrdinarySources": 33
