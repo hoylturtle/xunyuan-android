@@ -1,0 +1,53 @@
+name: Build Windows EXE
+on:
+  push:
+    branches: [main]
+    paths: ['desktop/**', 'android/app/src/main/java/com/btsou/search/Source.java', 'android/app/src/main/java/com/btsou/search/Result.java', 'android/app/src/main/java/com/btsou/search/SearchEngine.java', 'android/app/src/main/assets/sources.json', '.github/workflows/windows.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Find WiX installer tools
+        shell: pwsh
+        run: |
+          $wixBin = Get-ChildItem 'C:\Program Files (x86)' -Directory -Filter '*WiX*' | ForEach-Object { Join-Path $_.FullName 'bin' } | Where-Object { Test-Path (Join-Path $_ 'candle.exe') } | Select-Object -First 1
+          if (-not $wixBin) { throw 'WiX 3.x is missing on this runner' }
+          $wixBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Build and validate packaged Windows runtime
+        run: python desktop/build.py --package
+      - name: Exercise desktop and pagination on Windows
+        shell: pwsh
+        run: |
+          & desktop/build/image/Xunyuan/runtime/bin/java.exe -jar desktop/build/image/Xunyuan/app/Xunyuan.jar --smoke-test
+          if ($LASTEXITCODE -ne 0) { throw 'Desktop smoke test failed' }
+          if (-not (Test-Path desktop-smoke.png)) { throw 'Desktop screenshot missing' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Xunyuan-Windows
+          path: |
+            desktop/build/release/*
+            desktop-smoke.png
+      - name: Publish Windows release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view windows-v0.1.0 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create windows-v0.1.0 --target $env:GITHUB_SHA --title '寻源 Windows 0.1.0' --notes-file desktop/README.md --latest=false
+            if ($LASTEXITCODE -ne 0) { throw 'Release creation failed' }
+          }
+          gh release upload windows-v0.1.0 desktop/build/release/Xunyuan-Windows-0.1.0-Setup.exe desktop/build/release/Xunyuan-Windows-0.1.0-Portable.zip desktop/build/release/SHA256SUMS.txt desktop-smoke.png --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed' }

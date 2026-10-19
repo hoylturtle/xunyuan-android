@@ -56,9 +56,25 @@ class Builder:
             self.add('appendvariable',WFVariableName='搜索结果',WFInput=attach(var('候选结果')))
             self.end_if(clean)
 
+def show_result_page(b):
+    # The navigation item is never treated as a resource URL.
+    b.add('appendvariable',WFVariableName='显示结果',WFInput=attach(b.text('下一页 ▶')))
+    chosen=b.add('choosefromlist',WFInput=attach(var('显示结果')),WFChooseFromListActionPrompt=token('第 ',var('页码'),' 批 · 最多15条，选择资源或下一页'),WFChooseFromListActionSelectMultiple=False);b.set('已选结果',chosen)
+    resource=b.begin_if(chosen,5,'下一页 ▶')
+    # Selected text contains exactly the resource link; match only expected protocols.
+    selected=b.add('getitemfromlist',WFInput=attach(b.match(r'(?:https?://'+HOSTS['全部网盘']+r'/s/[^\s<>]+|magnet:\?xt=urn:btih:[^\s<>]+)',chosen)),WFItemSpecifier='Last Item');b.set('已选链接',selected)
+    g=b.menu('如何处理这个结果？',['打开链接（尝试唤起应用）','复制链接与提取码','复制磁链／网盘地址'])
+    b.case(g,'打开链接（尝试唤起应用）')
+    code=b.match(r'(?:提取码|提取碼|密码)[：:\s]*([a-zA-Z0-9]{4,8})',var('已选结果'));has=b.begin_if(b.count(code),2,0);b.add('setclipboard',WFInput=attach(b.first(b.group(code))),WFLocalOnly=True);b.end_if(has)
+    b.add('openurl',WFInput=token(var('已选链接')))
+    b.case(g,'复制链接与提取码');b.add('setclipboard',WFInput=attach(var('已选结果')),WFLocalOnly=True);b.add('showresult',Text='已复制结果和提取码。')
+    b.case(g,'复制磁链／网盘地址');b.add('setclipboard',WFInput=attach(var('已选链接')),WFLocalOnly=True);b.add('showresult',Text='已复制链接。');b.end_menu(g)
+    b.add('exit')
+    b.end_if(resource)
+
 def build(variant='standard'):
     allow_adult=variant=='adult';shortcut_name='寻源 Plus' if allow_adult else '寻源'
-    b=Builder(allow_adult);b.add('comment',WFCommentActionText='寻源 iOS 0.2.0：手机直连，无服务器。普通版过滤已识别成人关键词且不含成人来源；Plus 版单独发布，仅供成年人使用。分类可能误判，来源可能失效。选择结果后可复制或尝试打开；网盘 Universal Link 是否唤起应用由 iOS 与网盘应用决定。')
+    b=Builder(allow_adult);b.add('comment',WFCommentActionText='寻源 iOS 0.3.0：每屏最多15条，选择下一页继续。手机直连，无服务器。普通版过滤已识别成人关键词且不含成人来源；Plus 版单独发布，仅供成年人使用。分类可能误判，来源可能失效。选择结果后可复制或尝试打开；网盘 Universal Link 是否唤起应用由 iOS 与网盘应用决定。')
     if allow_adult:
         b.add('alert',WFAlertActionTitle='寻源 Plus · 确认已满18岁',WFAlertActionMessage='此版本允许成人关键词与相关来源。仅供年满18岁的用户使用，取消则停止本次运行。',WFAlertActionCancelButtonShown=True)
     q=b.add('ask',WFAskActionPrompt='寻源：输入资源关键词',WFInputType='Text',WFAskActionDefaultAnswer='');q=b.replace(r'^\s+|\s+$',q);b.set('关键词',q)
@@ -70,23 +86,26 @@ def build(variant='standard'):
     for name,host in HOSTS.items():
         b.case(g,name);b.literal('模式','pan');b.literal('网盘匹配',r'(?<=href=")https?://'+host+r'/s/[^"<>\s]+')
     b.case(g,sources[-1]);b.literal('模式','bt');b.end_menu(g)
-    g=b.menu('选择页码',['第1页','第2页','第3页'])
-    for i in range(3):b.case(g,'第'+str(i+1)+'页');b.literal('页码',str(i+1));b.literal('偏移',str(i*10))
-    b.end_menu(g)
+    # Source pages are requested only after the user asks for the next page.
+    offsets=b.add('detect.dictionary',WFInput=attach(b.text(json.dumps({str(i):str((i-1)*10) for i in range(1,101)}))))
+    pages=b.add('text.split',text=token(b.text('\n'.join(map(str,range(1,101))))),WFTextSeparator='New Lines')
+    navigation=b.repeat(pages);b.set('页码',var('Repeat Item'))
+    b.set('偏移',b.add('getvalueforkey',WFDictionaryKey=token(var('页码')),WFGetDictionaryValueType='Value',WFInput=attach(offsets)))
     b.set('搜索结果',b.add('list',WFItems=[]))
     mode=b.begin_if(var('模式'),4,'pan')
     url=b.text('https://www.pansearch.me/search?keyword=',var('编码关键词'),'&offset=',var('偏移'));b.set('搜索地址',url)
     page=b.add('downloadurl',WFURL=token(url),WFHTTPMethod='GET');html=b.add('detect.text',WFInput=attach(page));matches=b.match(JSON_PATTERN,html)
     missing=b.begin_if(b.count(matches),0,1);b.stop('网盘来源未返回可解析的数据，可能需要验证或站点已改版。可稍后重试。');b.end_if(missing)
     raw=b.first(b.group(matches));dictionary=b.add('detect.dictionary',WFInput=attach(raw));records=b.add('getvalueforkey',WFDictionaryKey='props.pageProps.data.data',WFGetDictionaryValueType='Value',WFInput=attach(dictionary))
+    exhausted=b.begin_if(b.count(records),0,1);b.stop('已经没有更多结果。');b.end_if(exhausted)
     repeat=b.repeat(records)
-    content=b.add('getvalueforkey',WFDictionaryKey='content',WFGetDictionaryValueType='Value',WFInput=attach(var('Repeat Item')))
+    content=b.add('getvalueforkey',WFDictionaryKey='content',WFGetDictionaryValueType='Value',WFInput=attach(var('Repeat Item 2')))
     # Each resource line generally carries its own title, link and extraction code.
     content=b.replace(r'(?i)<br\s*/?>',content,'\n');lines=b.add('text.split',text=token(content),WFTextSeparator='New Lines')
-    inner=b.repeat(lines);b.set('资源行',b.text(var('Repeat Item 2')))
+    inner=b.repeat(lines);b.set('资源行',b.text(var('Repeat Item 3')))
     links=b.match(var('网盘匹配'),var('资源行'));has=b.begin_if(b.count(links),2,0)
     label=b.replace(r'(?s)<a\b.*$',var('资源行'));label=b.replace(r'<[^>]*>',label);b.set('资源标题',label)
-    perlink=b.repeat(links);b.set('资源链接',b.text(var('Repeat Item 3')))
+    perlink=b.repeat(links);b.set('资源链接',b.text(var('Repeat Item 4')))
     # Only retain an extraction code from this line, never another resource's code.
     passes=b.match(r'(?:提取码|提取碼|密码)[：:\s]*([a-zA-Z0-9]{4,8})',var('资源行'));haspass=b.begin_if(b.count(passes),2,0)
     passcode=b.first(b.group(passes));b.set('结果标题',b.text(var('资源标题'),'  提取码：',passcode))
@@ -97,20 +116,24 @@ def build(variant='standard'):
     b.literal('磁力源','https://sukebei.nyaa.si/?f=0&c=0_0&q=' if allow_adult else 'https://nyaa.si/?f=0&c=0_0&q=')
     url=b.text(var('磁力源'),var('编码关键词'),'&p=',var('页码'));b.set('搜索地址',url)
     page=b.add('downloadurl',WFURL=token(url),WFHTTPMethod='GET');html=b.add('detect.text',WFInput=attach(page));rows=b.match(ROW_PATTERN,html)
-    repeat=b.repeat(rows);b.set('磁力行',b.text(var('Repeat Item')))
+    exhausted=b.begin_if(b.count(rows),0,1);b.stop('已经没有更多结果。');b.end_if(exhausted)
+    repeat=b.repeat(rows);b.set('磁力行',b.text(var('Repeat Item 2')))
     title=b.first(b.group(b.match(TITLE_PATTERN,var('磁力行'))));title=b.replace(r'&amp;',title,'&');b.set('资源标题',title)
     magnet=b.first(b.match(MAGNET_PATTERN,var('磁力行')));magnet=b.replace(r'&amp;',magnet,'&');b.set('资源链接',magnet)
     b.add_safe_result(var('资源标题'),var('资源链接'),var('资源标题'));b.end_repeat(repeat);b.end_if(mode)
-    noresult=b.begin_if(b.count(var('搜索结果')),0,1);b.stop('当前页没有匹配结果。可以更换关键词、网盘类型或页码后重试。');b.end_if(noresult)
-    chosen=b.add('choosefromlist',WFInput=attach(var('搜索结果')),WFChooseFromListActionPrompt='选择资源（含链接与提取码）',WFChooseFromListActionSelectMultiple=False);b.set('已选结果',chosen)
-    # Selected text contains exactly the resource link; match only expected protocols.
-    selected=b.add('getitemfromlist',WFInput=attach(b.match(r'(?:https?://'+HOSTS['全部网盘']+r'/s/[^\s<>]+|magnet:\?xt=urn:btih:[^\s<>]+)',chosen)),WFItemSpecifier='Last Item');b.set('已选链接',selected)
-    g=b.menu('如何处理这个结果？',['打开链接（尝试唤起应用）','复制链接与提取码','复制磁链／网盘地址'])
-    b.case(g,'打开链接（尝试唤起应用）')
-    code=b.match(r'(?:提取码|提取碼|密码)[：:\s]*([a-zA-Z0-9]{4,8})',var('已选结果'));has=b.begin_if(b.count(code),2,0);b.add('setclipboard',WFInput=attach(b.first(b.group(code))),WFLocalOnly=True);b.end_if(has)
-    b.add('openurl',WFInput=token(var('已选链接')))
-    b.case(g,'复制链接与提取码');b.add('setclipboard',WFInput=attach(var('已选结果')),WFLocalOnly=True);b.add('showresult',Text='已复制结果和提取码。')
-    b.case(g,'复制磁链／网盘地址');b.add('setclipboard',WFInput=attach(var('已选链接')),WFLocalOnly=True);b.add('showresult',Text='已复制链接。');b.end_menu(g)
+    # Keep every result in source order: do not discard items after the first 15.
+    b.set('显示结果',b.add('list',WFItems=[]))
+    results=b.repeat(var('搜索结果'))
+    b.add('appendvariable',WFVariableName='显示结果',WFInput=attach(var('Repeat Item 2')))
+    full=b.begin_if(b.count(var('显示结果')),2,14)
+    show_result_page(b);b.set('显示结果',b.add('list',WFItems=[]));b.end_if(full)
+    b.end_repeat(results)
+    remainder=b.begin_if(b.count(var('显示结果')),2,0);show_result_page(b);b.end_if(remainder)
+    empty_page=b.begin_if(b.count(var('搜索结果')),0,1)
+    g=b.menu('当前来源页没有符合筛选条件的结果',['下一页','结束搜索'])
+    b.case(g,'下一页');b.case(g,'结束搜索');b.add('exit');b.end_menu(g);b.end_if(empty_page)
+    b.end_repeat(navigation)
+    b.stop('已浏览100个来源页，请更换关键词继续搜索。')
     workflow={'WFWorkflowName':shortcut_name,'WFWorkflowActions':b.actions,'WFWorkflowClientVersion':'2302.0.4','WFWorkflowClientRelease':'18.0','WFWorkflowMinimumClientVersion':900,'WFWorkflowMinimumClientVersionString':'900','WFWorkflowIcon':{'WFWorkflowIconStartColor':431817727,'WFWorkflowIconGlyphNumber':61440},'WFWorkflowTypes':[],'WFWorkflowInputContentItemClasses':[],'WFWorkflowOutputContentItemClasses':[],'WFWorkflowImportQuestions':[],'WFWorkflowHasOutputFallback':False,'WFQuickActionSurfaces':[]}
     dist=ROOT/'dist';dist.mkdir(exist_ok=True)
     stem='Xunyuan-Plus' if allow_adult else 'Xunyuan'

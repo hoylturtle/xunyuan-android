@@ -9,6 +9,7 @@ fi
 command -v python3 >/dev/null || { echo '需要 Python 3。' >&2; exit 1; }
 command -v shortcuts >/dev/null || { echo '找不到系统快捷指令命令。' >&2; exit 1; }
 python3 test_shortcut.py
+python3 test_pagination.py
 staging=$(mktemp -d "${TMPDIR:-/tmp}/xunyuan-sign.XXXXXX")
 trap 'rm -rf "$staging"' EXIT
 shortcuts sign --mode anyone --input dist/Xunyuan.unsigned.shortcut --output "$staging/寻源.shortcut"

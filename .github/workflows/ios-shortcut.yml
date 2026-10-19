@@ -15,6 +15,7 @@ jobs:
         run: |
           python3 ios/build_shortcut.py
           python3 ios/test_shortcut.py
+          python3 ios/test_pagination.py
       - name: Verify signed workflow matches source
         run: |
           sudo apt-get update -qq
@@ -35,5 +36,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view ios-v0.2.0 > /dev/null 2>&1 || gh release create ios-v0.2.0 --title '寻源 iOS 快捷指令 0.2.0 · 双版本' --notes-file ios/RELEASE_NOTES.md --latest=false
-          gh release upload ios-v0.2.0 ios/dist/寻源.shortcut "ios/dist/寻源 Plus.shortcut" ios/README.md --clobber
+          gh release view ios-v0.3.0 > /dev/null 2>&1 || gh release create ios-v0.3.0 --title '寻源 iOS 快捷指令 0.3.0 · 分页浏览' --notes-file ios/RELEASE_NOTES.md --latest=false
+          gh release upload ios-v0.3.0 ios/dist/寻源.shortcut "ios/dist/寻源 Plus.shortcut" ios/README.md --clobber

@@ -11,12 +11,14 @@
 
 ## 导入与使用
 
-[打开双版本发布页](https://github.com/hoylturtle/xunyuan-android/releases/tag/ios-v0.2.0)。在 iPhone Safari 下载所需文件，在「文件」中打开，按提示添加到「快捷指令」，也可添加到主屏幕。
+当前分页版源码已更新，尚未签名发布；旧版已签名文件不包含本次分页改动。签名文件可在 iPhone「文件」中打开并添加到「快捷指令」。
 
 1. 输入关键词。
 2. 选择全部网盘、百度、夸克、阿里，或磁力来源。
-3. 选择第1、2或3页。
-4. 在结果列表选择资源，打开链接或复制链接／提取码。
+3. 首次显示最多15条结果，末尾提供「下一页 ▶」。
+4. 选择资源后打开或复制；选择「下一页」则继续浏览，不重复输入关键词或选择来源。
+
+同一个网站响应内的结果全部按顺序保留，每屏最多15条；显示完这一批后再请求来源下一页。结果不足15条时显示实际数量，不补造结果。过滤后为空时可继续下一页；来源返回空数据时结束。每次搜索最多浏览100个来源页。
 
 普通版磁力来源为 Nyaa，Plus 磁力来源为 Sukebei。网盘通过 PanSearch 的公开分享索引获取链接，不搜索私人网盘文件。Sukebei 尚未通过成人关键词的联网可用性测试。
 
@@ -26,7 +28,7 @@
 
 ## 签名与验证
 
-发布前通过 RoutineHub HubSign 签名，并用 shortcut-sign 校验签名、提取工作流，逐项核对普通版168个动作、Plus版155个动作与源文件一致。只向签名服务发送公开工作流，不发送用户关键词、Apple ID 或网盘账号。
+当前普通版220个动作、Plus版207个动作。发布流程要求签名后通过 shortcut-sign 校验并逐项核对动作与源文件一致；目前尚未取得本版签名文件。只向签名服务发送公开工作流，不发送用户关键词、Apple ID 或网盘账号。
 
 结构检查覆盖变量、UTF-16占位符、控制流、版本分离，以及真实页面样本解析。**尚未在 iPhone 真机导入并执行**，签名校验不等于真机功能验证。首次使用请用普通关键词测试。
 
@@ -35,6 +37,7 @@
 ```sh
 python3 ios/build_shortcut.py
 python3 ios/test_shortcut.py
+python3 ios/test_pagination.py
 python3 ios/sign_via_hubsign.py
 python3 ios/verify_signed.py
 ```
@@ -46,7 +49,7 @@ shortcuts sign --mode anyone --input ios/dist/Xunyuan.unsigned.shortcut --output
 shortcuts sign --mode anyone --input ios/dist/Xunyuan-Plus.unsigned.shortcut --output 'ios/prebuilt/寻源 Plus.shortcut'
 ```
 
-GitHub 的 macOS runner 未登录 iCloud，不能直接使用官方签名。本次采用 [Cherri 的 HubSign 流程](https://github.com/electrikmilk/cherri/blob/main/signing.go)，再用 [shortcut-sign](https://github.com/0xilis/shortcut-sign) 验证签名及动作一致性。修改动作后必须重新签名，否则发布检查会拒绝上传。
+GitHub 的 macOS runner 未登录 iCloud，不能直接使用官方签名。备用流程采用 [Cherri 的 HubSign 流程](https://github.com/electrikmilk/cherri/blob/main/signing.go)，再用 [shortcut-sign](https://github.com/0xilis/shortcut-sign) 验证签名及动作一致性。修改动作后必须重新签名，否则发布检查会拒绝上传。
 
 iOS 使用独立 `ios-v*` 标签和 `--latest=false`，不影响安卓应用的在线更新地址。未生成 iCloud 分享链接；`*.unsigned.shortcut` 仅供开发，不是可安装成品。
 
