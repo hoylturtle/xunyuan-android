@@ -3,7 +3,7 @@
 import argparse,hashlib,os,pathlib,shutil,subprocess,sys
 root=pathlib.Path(__file__).resolve().parent.parent
 out=root/'desktop/build';classes=out/'classes';app=out/'app'
-VERSION='0.1.1'
+VERSION='0.1.2'
 
 def run(*args):
     subprocess.run([str(x) for x in args],check=True,cwd=root)

@@ -50,6 +50,14 @@ public final class DesktopTests {
         doc.getJSONObject("props").getJSONObject("pageProps").getJSONObject("data").getJSONArray("data").getJSONObject(0).put("content",repeated);
         List<Result> duplicates=SearchEngine.parse(pan,"<script id='__NEXT_DATA__'>"+doc+"</script>",pan.url("test",1));
         check(duplicates.size()==1&&duplicates.get(0).password.equals("zz99"),"parser dedup preserves later extraction code");
+        TapSequence sequence=new TapSequence();
+        for(int i=0;i<5;i++)check(!sequence.tap(i*100_000_000L),"fewer than six clicks do not activate");
+        check(sequence.tap(500_000_000L),"sixth click activates");
+        check(!sequence.tap(600_000_000L),"sequence resets after activation");
+        check(!sequence.tap(3_000_000_000L),"idle gap resets partial sequence");
+        for(int i=1;i<5;i++)check(!sequence.tap(3_000_000_000L+i*100_000_000L),"post-timeout partial sequence");
+        check(sequence.tap(3_500_000_000L),"six new clicks activate after timeout");
+        TapSequence newSession=new TapSequence();check(!newSession.tap(0),"new session starts locked");
         System.out.println("DESKTOP_TESTS_OK checks="+checks);
     }
 }
