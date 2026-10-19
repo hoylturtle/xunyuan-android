@@ -1,28 +1,31 @@
 {
-  "version": "0.3.1",
-  "versionCode": 5,
+  "version": "0.3.2",
+  "versionCode": 6,
   "name": "寻源",
   "github": "https://github.com/hoylturtle/xunyuan-android",
-  "checks": 204,
+  "checks": 205,
   "androidMin": 26,
   "androidTarget": 35,
   "deviceTested": false,
   "updateManifest": "https://github.com/hoylturtle/xunyuan-android/releases/latest/download/update.json",
   "initialReleasePublished": true,
-  "apkSha256": "76b4995a139be02a7d47358d40b4217ba1c059b71c86744ee7b0b087950e9700",
+  "apkSha256": "8f2decb6c4cf0eba7905c4654817656d18aac9b262c47c24ff308390e47b04cd",
   "publicUpdateEndpointVerified": true,
-  "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/v0.3.1",
+  "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/v0.3.2",
   "automaticSigningSecretConfigured": false,
   "androidEmulatorTested": true,
   "androidEmulatorApi": 30,
   "physicalDeviceTested": false,
-  "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39267520641",
+  "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39272984613",
   "hiddenToggleEmulatorTested": true,
   "windows": {
-    "version": "0.1.2",
+    "version": "0.1.5",
     "singleFile": true,
     "checks": 460,
     "hiddenToggleUiTested": true,
-    "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/windows-v0.1.2"
-  }
+    "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/windows-v0.1.5",
+    "linkHealthChecks": 40
+  },
+  "linkHealthChecks": 40,
+  "defaultOrdinarySources": 33
 }
