@@ -16,7 +16,7 @@ public final class SearchEngine {
     public interface Listener {
         void done(Source source,List<Result> results,String error);
         default void found(Source source,Result result){}
-        default void removed(Source source){}
+        default void removed(Source source,Result result){}
     }
     private final ExecutorService pool=Executors.newFixedThreadPool(5);
     private final ExecutorService checks=Executors.newFixedThreadPool(6);
@@ -43,7 +43,7 @@ public final class SearchEngine {
                             LinkHealth.Check check=health.check(r.url);r.linkState=check.state;r.linkMessage=check.message;r.linkCheckedAt=check.checkedAt;
                         }
                         if(generation.get()!=ticket||Thread.currentThread().isInterrupted())return;
-                        if(!r.linkState.equals("invalid")){kept.add(r);listener.found(s,r);}else listener.removed(s);
+                        if(!r.linkState.equals("invalid")){kept.add(r);listener.found(s,r);}else listener.removed(s,r);
                         if(remaining.decrementAndGet()==0)listener.done(s,new ArrayList<>(kept),"");
                     };
                     if(r.kind.equals("bt"))complete.run();else jobs.add(checks.submit(complete));

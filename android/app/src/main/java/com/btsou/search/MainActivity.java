@@ -110,13 +110,12 @@ public final class MainActivity extends Activity {
         InputMethodManager im=(InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(query!=null)im.hideSoftInputFromWindow(query.getWindowToken(),0);
         final boolean adultSnapshot=adult;final int searchPage=page;
         engine.search(list,term,searchPage,adultSnapshot,new SearchEngine.Listener(){
-            public void removed(Source s){runOnUiThread(()->{if(destroyed||generation!=token)return;invalidLinks++;scheduleResults();});}
+            public void removed(Source s,Result r){runOnUiThread(()->{if(destroyed||generation!=token)return;results.remove(r.key());invalidLinks++;scheduleResults();});}
             public void found(Source s,Result r){runOnUiThread(()->{if(destroyed||generation!=token)return;results.merge(r.key(),r,Result::mergeKnown);scheduleResults();});}
             public void done(Source s,List<Result> found,String error){runOnUiThread(()->{
             if(destroyed||generation!=token)return;
             pending--;if(error.isEmpty())success++;statuses.put(s.id,error.isEmpty()?"第 "+searchPage+" 页 · "+found.size()+" 条":error);
             prefs.edit().putString("last:"+s.id,statuses.get(s.id)).apply();
-            for(Result r:found)if(r.visible(adult))results.merge(r.key(),r,Result::mergeKnown);
             if(pending==0)busy=false;
             if("搜索".equals(screen))updateResults();else if("来源".equals(screen))render();
         });}});
