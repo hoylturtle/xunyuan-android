@@ -16,6 +16,17 @@ def tap(label):
                 adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2));time.sleep(.7);return
         time.sleep(.6)
     raise RuntimeError('Missing UI control: '+label)
+def scroll_has(text):
+    # A source below the fold is still present; inspect every visible segment.
+    width,height=map(int,re.findall(r'\d+',adb('shell','wm','size').decode())[-2:])
+    last=None
+    for _ in range(12):
+        xml=dump()
+        if text in xml:return True
+        if xml==last:return False
+        last=xml
+        adb('shell','input','swipe',str(width//2),str(height*4//5),str(width//2),str(height//3),'250');time.sleep(.3)
+    return False
 def capture(prefix,name):
     time.sleep(.8);(dest/(prefix+'-'+name+'.png')).write_bytes(adb('exec-out','screencap','-p'))
     (dest/(prefix+'-'+name+'.xml')).write_text(dump())
@@ -41,10 +52,10 @@ def screens(apk,prefix):
         title_taps();tap('取消');assert '直连搜索 · 普通模式' in dump(),'Cancel must keep mode off'
         title_taps();tap('我已满18岁，开启');assert '扩展模式' in dump(),'Six taps must unlock'
         capture(prefix,'hidden-enabled')
-        tap('来源');assert 'Sukebei' in dump(),'Unlocked source must appear'
+        tap('来源');assert scroll_has('Sukebei'),'Unlocked source must appear'
         tap('搜索');tap('搜索关键词');adb('shell','input','text','testkeyword')
         title_taps();xml=dump();assert '直连搜索 · 普通模式' in xml and 'testkeyword' not in xml,'Lock must clear query'
-        tap('来源');assert 'Sukebei' not in dump(),'Locked source must be hidden'
+        tap('来源');assert not scroll_has('Sukebei'),'Locked source must be hidden'
         tap('搜索');title_taps();tap('我已满18岁，开启')
         adb('shell','am','force-stop','com.btsou.search');adb('shell','am','start','-n','com.btsou.search/.MainActivity');time.sleep(2)
         assert '直连搜索 · 普通模式' in dump(),'Process restart must reset mode'
