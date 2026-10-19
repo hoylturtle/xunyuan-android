@@ -2,7 +2,7 @@ name: Build Windows EXE
 on:
   push:
     branches: [main]
-    paths: ['desktop/**', 'android/app/src/main/java/com/btsou/search/Source.java', 'android/app/src/main/java/com/btsou/search/Result.java', 'android/app/src/main/java/com/btsou/search/SearchEngine.java', 'android/app/src/main/assets/sources.json', '.github/workflows/windows.yml']
+    paths: ['desktop/**', 'android/app/src/main/java/com/btsou/search/Source.java', 'android/app/src/main/java/com/btsou/search/Result.java', 'android/app/src/main/java/com/btsou/search/SearchEngine.java', 'android/app/src/main/java/com/btsou/search/TapSequence.java', 'android/app/src/main/assets/sources.json', '.github/workflows/windows.yml']
   workflow_dispatch:
 permissions:
   contents: write

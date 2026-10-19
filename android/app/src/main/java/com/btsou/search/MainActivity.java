@@ -33,18 +33,19 @@ public final class MainActivity extends Activity {
     private ScrollView resultsScroll;
     private boolean showBackupSources=false;
     private boolean adult=false,busy=false,destroyed=false;
+    private final TapSequence brandTaps=new TapSequence();
     private String screen="搜索",filter="全部",term="",draft="";
     private int generation=0,page=1,pending=0,total=0,success=0;
 
     @Override public void onCreate(Bundle b){
-        super.onCreate(b);prefs=getSharedPreferences("btsou",MODE_PRIVATE);adult=prefs.getBoolean("adult",false);
+        super.onCreate(b);prefs=getSharedPreferences("btsou",MODE_PRIVATE);adult=false;prefs.edit().remove("adult").apply();
         try{
             String bundled=read(getAssets().open("sources.json"),512*1024);String custom=prefs.getString("customSources","");
             try{sources=Source.read(custom.isEmpty()?bundled:custom);}catch(Exception e){sources=Source.read(bundled);toast("自定义来源配置无效，已使用内置来源");}
             JSONArray a=new JSONArray(prefs.getString("favorites","[]"));for(int i=0;i<a.length();i++){Result r=Result.from(a.getJSONObject(i));if(Result.safeUrl(r.url))favorites.put(r.key(),r);}
             a=new JSONArray(prefs.getString("history","[]"));for(int i=0;i<a.length();i++)history.add(a.getString(i));
         }catch(Exception e){toast("配置加载失败："+SearchEngine.message(e));}
-        if(b!=null){draft=b.getString("draft","");screen=b.getString("screen","搜索");}
+        if(b!=null){draft=b.getString("draft","");screen=b.getString("screen","搜索");if(Result.adultText(draft))draft="";}
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(Color.WHITE);
         render();
         updates=new AppUpdates(this);
@@ -74,7 +75,7 @@ public final class MainActivity extends Activity {
     private void render(){
         query=null;root=column();root.setBackgroundColor(BG);setContentView(root);
         if(Build.VERSION.SDK_INT>=30){getWindow().setDecorFitsSystemWindows(false);getWindow().getDecorView().getWindowInsetsController().setSystemBarsAppearance(WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS|WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS|WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);root.setOnApplyWindowInsetsListener((v,in)->{android.graphics.Insets bars=in.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.ime());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);return in;});}
-        LinearLayout header=row();header.setPadding(dp(22),dp(14),dp(22),dp(15));FrameLayout brand=new FrameLayout(this);brand.setBackground(shape(GREEN,13));UiIcon symbol=new UiIcon(this,"compass",Color.WHITE);brand.addView(symbol,new FrameLayout.LayoutParams(dp(26),dp(26),Gravity.CENTER));header.addView(brand,new LinearLayout.LayoutParams(dp(43),dp(43)));LinearLayout labels=column();LinearLayout.LayoutParams hp=new LinearLayout.LayoutParams(0,-2,1);hp.leftMargin=dp(11);header.addView(labels,hp);labels.addView(text("寻源",23,INK,true));gap(labels,3);labels.addView(text("磁力与网盘，轻松找到",10,MUTED,false));header.addView(badge("●  直连搜索",GREEN,Color.rgb(231,239,223)));root.addView(header);
+        LinearLayout header=row();header.setPadding(dp(22),dp(14),dp(22),dp(15));FrameLayout brand=new FrameLayout(this);brand.setBackground(shape(GREEN,13));UiIcon symbol=new UiIcon(this,"compass",Color.WHITE);brand.addView(symbol,new FrameLayout.LayoutParams(dp(26),dp(26),Gravity.CENTER));header.addView(brand,new LinearLayout.LayoutParams(dp(43),dp(43)));LinearLayout labels=column();LinearLayout.LayoutParams hp=new LinearLayout.LayoutParams(0,-2,1);hp.leftMargin=dp(11);header.addView(labels,hp);labels.addView(brandTitle(23));gap(labels,3);labels.addView(text("磁力与网盘，轻松找到",10,MUTED,false));header.addView(badge("●  直连搜索",GREEN,Color.rgb(231,239,223)));root.addView(header);
         body=column();root.addView(body,new LinearLayout.LayoutParams(-1,0,1));
         View topLine=new View(this);topLine.setBackgroundColor(LINE);root.addView(topLine,new LinearLayout.LayoutParams(-1,dp(1)));
         nav=row();nav.setBackgroundColor(Color.WHITE);nav.setPadding(dp(12),dp(8),dp(12),dp(8));String[] tabs={"搜索","收藏","来源","设置"},icons={"search","bookmark","sources","settings"};
@@ -90,7 +91,7 @@ public final class MainActivity extends Activity {
         searchButton=button(busy?"停止":"搜索",true,()->{if(busy)stop();else start(false);});input.addView(searchButton,new LinearLayout.LayoutParams(dp(65),dp(44)));controls.addView(input);gap(controls,10);
         query.setOnEditorActionListener((v,id,event)->{if(id==android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH){start(false);return true;}return false;});
         HorizontalScrollView hsv=new HorizontalScrollView(this);hsv.setHorizontalScrollBarEnabled(false);LinearLayout chips=row();for(String f:new String[]{"全部","磁力","百度","夸克","阿里","其他网盘"}){Button b=button(f,f.equals(filter),()->{draft=query.getText().toString();filter=f;render();});b.setTextSize(12);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,dp(42));lp.setMargins(0,0,dp(7),0);chips.addView(b,lp);}hsv.addView(chips);controls.addView(hsv);gap(controls,10);
-        LinearLayout state=row();UiIcon shield=new UiIcon(this,"shield",adult?Color.rgb(155,103,47):GREEN);state.addView(shield,new LinearLayout.LayoutParams(dp(14),dp(14)));TextView protection=text(adult?"成人搜索已开启":"成人搜索已关闭",10,adult?Color.rgb(155,103,47):MUTED,false);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,-2,1);pp.leftMargin=dp(5);state.addView(protection,pp);TextView sourcesLink=text(activeSources().size()+" 个来源  ›",11,GREEN,true);sourcesLink.setPadding(dp(10),dp(7),0,dp(7));sourcesLink.setOnClickListener(v->{draft=query.getText().toString();screen="来源";render();});state.addView(sourcesLink);controls.addView(state);gap(controls,9);
+        LinearLayout state=row();UiIcon shield=new UiIcon(this,"shield",adult?Color.rgb(155,103,47):GREEN);state.addView(shield,new LinearLayout.LayoutParams(dp(14),dp(14)));TextView protection=text(adult?"扩展模式":"直连搜索 · 普通模式",10,adult?Color.rgb(155,103,47):MUTED,false);LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,-2,1);pp.leftMargin=dp(5);state.addView(protection,pp);TextView sourcesLink=text(activeSources().size()+" 个来源  ›",11,GREEN,true);sourcesLink.setPadding(dp(10),dp(7),0,dp(7));sourcesLink.setOnClickListener(v->{draft=query.getText().toString();screen="来源";render();});state.addView(sourcesLink);controls.addView(state);gap(controls,9);
         summary=text("",14,INK,true);controls.addView(summary);gap(controls,6);progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);progress.setProgressTintList(android.content.res.ColorStateList.valueOf(GREEN));controls.addView(progress,new LinearLayout.LayoutParams(-1,dp(3)));notice=text("",11,MUTED,false);notice.setPadding(0,dp(3),0,dp(10));controls.addView(notice);body.addView(controls);
         resultsScroll=new ScrollView(this);resultsScroll.setClipToPadding(false);resultsBox=column();resultsBox.setPadding(dp(20),dp(4),dp(20),dp(24));resultsScroll.addView(resultsBox);body.addView(resultsScroll,new LinearLayout.LayoutParams(-1,0,1));updateResults();
     }
@@ -99,7 +100,7 @@ public final class MainActivity extends Activity {
     private void start(boolean next){
         String q=query==null?draft:query.getText().toString().trim();if(next)q=term;
         if(q.isEmpty()){toast("请输入搜索关键词");return;}if(q.length()>150){toast("关键词最多 150 字");return;}
-        if(!adult&&Result.adultText(q)){toast("请先在设置中开启成人资源搜索");return;}
+        if(!adult&&Result.adultText(q)){toast("当前搜索范围不支持该关键词");return;}
         if(busy){generation++;engine.cancel();}
         List<Source> list=activeSources();if(next)list.removeIf(s->s.singlePage);if(list.isEmpty()){toast("没有启用可搜索的来源，请到来源页选择");return;}
         if(!next){page=1;results.clear();term=q;draft=q;history.remove(q);history.add(0,q);while(history.size()>12)history.remove(history.size()-1);prefs.edit().putString("history",new JSONArray(history).toString()).apply();}else page++;
@@ -110,7 +111,7 @@ public final class MainActivity extends Activity {
             if(destroyed||generation!=token)return;
             pending--;if(error.isEmpty())success++;statuses.put(s.id,error.isEmpty()?"第 "+searchPage+" 页 · "+found.size()+" 条":error);
             prefs.edit().putString("last:"+s.id,statuses.get(s.id)).apply();
-            for(Result r:found)if(r.visible(adult))results.putIfAbsent(r.key(),r);
+            for(Result r:found)if(r.visible(adult))results.merge(r.key(),r,Result::mergeKnown);
             if(pending==0)busy=false;
             if("搜索".equals(screen))updateResults();else if("来源".equals(screen))render();
         }));
@@ -176,13 +177,18 @@ public final class MainActivity extends Activity {
     }
     private void renderSettings(){
         ScrollView scroll=new ScrollView(this);LinearLayout list=column();padded(list,20);pageTitle(list,"设置","按照自己的习惯，调整寻源");
-        LinearLayout version=card();padded(version,18);LinearLayout brand=row();FrameLayout brandBox=new FrameLayout(this);brandBox.setBackground(shape(GREEN,14));brandBox.addView(new UiIcon(this,"compass",Color.WHITE),new FrameLayout.LayoutParams(dp(29),dp(29),Gravity.CENTER));brand.addView(brandBox,new LinearLayout.LayoutParams(dp(49),dp(49)));LinearLayout names=column();LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(0,-2,1);np.leftMargin=dp(13);brand.addView(names,np);names.addView(text("寻源",20,INK,true));gap(names,5);names.addView(text("版本 0.3.0 · 轻松找到好资源",11,MUTED,false));version.addView(brand);gap(version,16);version.addView(button("检查应用更新",true,()->updates.check(true)),new LinearLayout.LayoutParams(-1,dp(46)));list.addView(version);
-        section(list,"搜索偏好");LinearLayout preference=card();padded(preference,16);Switch sw=new Switch(this);sw.setText("成人资源搜索");sw.setTextSize(15);sw.setTextColor(INK);sw.setChecked(adult);sw.setPadding(0,dp(7),0,dp(7));tintSwitch(sw);preference.addView(sw);gap(preference,8);preference.addView(text("默认关闭，仅供成年人手动开启。关闭时隐藏识别出的成人结果、收藏和历史；分类可能存在误判。",11,MUTED,false));sw.setOnCheckedChangeListener((b,on)->{if(on&&!adult)new AlertDialog.Builder(this).setTitle("开启成人资源搜索").setMessage("此选项仅供年满18周岁的用户使用，开启后允许成人关键词与相关来源。").setPositiveButton("我已满18岁，开启",(d,w)->setAdult(true)).setNegativeButton("取消",(d,w)->render()).setOnCancelListener(d->render()).show();else if(!on&&adult)setAdult(false);});list.addView(preference);
+        LinearLayout version=card();padded(version,18);LinearLayout brand=row();FrameLayout brandBox=new FrameLayout(this);brandBox.setBackground(shape(GREEN,14));brandBox.addView(new UiIcon(this,"compass",Color.WHITE),new FrameLayout.LayoutParams(dp(29),dp(29),Gravity.CENTER));brand.addView(brandBox,new LinearLayout.LayoutParams(dp(49),dp(49)));LinearLayout names=column();LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(0,-2,1);np.leftMargin=dp(13);brand.addView(names,np);names.addView(brandTitle(20));gap(names,5);names.addView(text("版本 0.3.1 · 轻松找到好资源",11,MUTED,false));version.addView(brand);gap(version,16);version.addView(button("检查应用更新",true,()->updates.check(true)),new LinearLayout.LayoutParams(-1,dp(46)));list.addView(version);
         section(list,"数据与备份");LinearLayout data=card();settingRow(data,"history","清除搜索历史","清理最近搜索的关键词",()->{history.clear();prefs.edit().remove("history").apply();toast("历史已清除");});divider(data);settingRow(data,"upload","导出收藏备份","保存一份本地收藏文件",()->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.setType("application/json");i.addCategory(Intent.CATEGORY_OPENABLE);i.putExtra(Intent.EXTRA_TITLE,"寻源-收藏.json");startActivityForResult(i,43);});divider(data);settingRow(data,"download","导入收藏备份","恢复已保存的收藏",()->chooseFile(44));list.addView(data);
         section(list,"应用与更新");LinearLayout app=card();LinearLayout autoBox=column();padded(autoBox,16);Switch auto=new Switch(this);auto.setText("自动检查更新");auto.setTextSize(15);auto.setTextColor(INK);auto.setPadding(0,dp(5),0,dp(5));tintSwitch(auto);auto.setChecked(prefs.getBoolean("autoUpdates",true));auto.setOnCheckedChangeListener((b,on)->prefs.edit().putBoolean("autoUpdates",on).apply());autoBox.addView(auto);gap(autoBox,5);autoBox.addView(text("启动时每天检查一次，安装前会请你确认。",11,MUTED,false));app.addView(autoBox);divider(app);settingRow(app,"link","GitHub 项目","查看源码、说明与发布版本",()->open(AppUpdates.REPO_URL));divider(app);settingRow(app,"sources","开源参考与许可","依赖和搜索来源说明",()->new AlertDialog.Builder(this).setTitle("开源参考与许可").setMessage("寻源为独立 Java 实现。\n\nHTML 解析：jsoup 1.18.3（MIT）。\n技术调研：TorrentSearch、PanSou、qBittorrent 搜索插件。\n\n完整依赖许可与来源说明见 GitHub 仓库。").setPositiveButton("关闭",null).show());list.addView(app);gap(list,20);TextView privacy=text("搜索直连第三方来源，数据与收藏仅保存在本机。\n没有账号、广告 SDK 或统计 SDK。",11,MUTED,false);privacy.setGravity(Gravity.CENTER);list.addView(privacy);gap(list,8);scroll.addView(list);body.addView(scroll,new LinearLayout.LayoutParams(-1,-1));
     }
 
-    private void setAdult(boolean on){adult=on;prefs.edit().putBoolean("adult",on).apply();stop();results.clear();term="";draft="";statuses.clear();render();}
+    private TextView brandTitle(int size){TextView name=text(adult?"寻源 ·":"寻源",size,INK,true);name.setContentDescription("寻源名称");name.setFocusable(true);name.setOnClickListener(v->onBrandTap());return name;}
+    private void onBrandTap(){
+        if(!brandTaps.tap(android.os.SystemClock.elapsedRealtimeNanos()))return;
+        if(adult){setAdult(false);toast("已恢复普通模式");return;}
+        new AlertDialog.Builder(this).setTitle("启用扩展模式").setMessage("扩展搜索可能包含成人内容，仅供年满18周岁的用户使用。").setPositiveButton("我已满18岁，开启",(d,w)->{setAdult(true);toast("扩展模式已开启");}).setNegativeButton("取消",null).show();
+    }
+    private void setAdult(boolean on){adult=on;prefs.edit().remove("adult").apply();stop();results.clear();term="";draft="";statuses.clear();render();}
     private void saveFavorites(){JSONArray a=new JSONArray();for(Result r:favorites.values())try{a.put(r.json());}catch(Exception ignored){}prefs.edit().putString("favorites",a.toString()).apply();}
     private void chooseFile(int code){Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");i.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"application/json","text/plain","application/octet-stream"});startActivityForResult(i,code);}
     @Override protected void onActivityResult(int req,int res,Intent data){super.onActivityResult(req,res,data);if(res!=RESULT_OK||data==null||data.getData()==null)return;

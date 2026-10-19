@@ -21,7 +21,7 @@ def main():
         if p.exists():shutil.rmtree(p)
         p.mkdir(parents=True)
     shared=root/'android/app/src/main/java/com/btsou/search'
-    sources=[shared/(n+'.java') for n in ['Source','Result','SearchEngine']]+list((root/'desktop/src').rglob('*.java'))
+    sources=[shared/(n+'.java') for n in ['Source','Result','SearchEngine','TapSequence']]+list((root/'desktop/src').rglob('*.java'))
     run(tool('javac'),'-encoding','UTF-8','--release','17','-cp',os.pathsep.join(map(str,deps)),'-d',classes,*sources)
     shutil.copy2(root/'android/app/src/main/assets/sources.json',classes/'sources.json')
     (classes/'fixtures').mkdir()
