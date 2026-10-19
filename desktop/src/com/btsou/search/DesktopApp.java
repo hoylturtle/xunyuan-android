@@ -15,7 +15,7 @@ import org.json.*;
 
 /** Desktop shell; Source, Result and SearchEngine are shared with Android. */
 public final class DesktopApp {
-    public static final String VERSION="0.1.5";
+    public static final String VERSION="0.1.6";
     private static final Color BG=new Color(246,248,245),GREEN=new Color(35,105,80),INK=new Color(30,47,39),MUTED=new Color(103,119,109);
     private final JFrame frame=new JFrame("寻源 · Windows "+VERSION);
     private final SearchEngine engine=new SearchEngine();
@@ -46,6 +46,7 @@ public final class DesktopApp {
         String json=new String(Objects.requireNonNull(getClass().getResourceAsStream("/sources.json")).readAllBytes(),StandardCharsets.UTF_8);
         sources=new ArrayList<>(Source.read(json));
         if(sources.stream().noneMatch(s->s.id.equals("sukebei")))sources.add(new Source(new JSONObject().put("id","sukebei").put("name","Sukebei").put("kind","bt").put("parser","nyaa").put("prefix","https://sukebei.nyaa.si/?f=0&c=0_0&q=").put("middle","&p=").put("adult",true).put("enabled",false).put("note","需开启扩展搜索并勾选此来源；可用性取决于网络")));
+        java.util.List<Image> icons=new ArrayList<>();for(int size:new int[]{16,32,48,128,256}){java.net.URL icon=getClass().getResource("/icons/icon-"+size+".png");if(icon!=null)icons.add(javax.imageio.ImageIO.read(icon));}frame.setIconImages(icons);
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         frame.setMinimumSize(new Dimension(1000,640));frame.setSize(1080,780);frame.setLocationRelativeTo(null);
         frame.addWindowListener(new WindowAdapter(){public void windowClosed(WindowEvent e){generation.incrementAndGet();engine.close();}});
@@ -156,6 +157,7 @@ public final class DesktopApp {
         if(adultEnabled||sourceRows.get("sukebei").isVisible()||sourceChecks.get("sukebei").isSelected()||!collected.isEmpty()||!visible.isEmpty()||!query.getText().isEmpty()||!diagnostics.getText().isEmpty()||!favoriteModel.isEmpty())throw new AssertionError("Lock did not clear or hide sensitive state");
         favorites.remove(sensitive.key());confirmAdult=originalConfirm;
         for(int i=1;i<=31;i++){Result r=new Result();r.title="Windows 界面测试资源 "+i;r.kind=i%2==0?"百度":"bt";r.source="离线测试数据";r.password=i%2==0?"abcd":"";r.url=i%2==0?"https://pan.baidu.com/s/demo"+i:"magnet:?xt=urn:btih:"+String.format("%040x",i);visible.add(r);collected.put(r.key(),r);}browsing=true;paintResults();
+        if(frame.getIconImages().size()!=5)throw new AssertionError("Window icons missing");
         if(adultEnabled||resultModel.size()!=15)throw new AssertionError("Initial UI state");
         next.doClick();if(displayPage!=1||resultModel.size()!=15||!resultModel.get(0).title.endsWith("16"))throw new AssertionError("Next 15 results");
         next.doClick();if(displayPage!=2||resultModel.size()!=1)throw new AssertionError("Last result");

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Build a single-file portable Windows EXE with the JDK."""
-import argparse,hashlib,os,pathlib,shutil,subprocess,sys
+import argparse,hashlib,os,pathlib,shutil,subprocess,sys,json,zipfile
 root=pathlib.Path(__file__).resolve().parent.parent
 out=root/'desktop/build';classes=out/'classes';app=out/'app'
-VERSION='0.1.5'
+VERSION='0.1.6'
 
 def run(*args):
     subprocess.run([str(x) for x in args],check=True,cwd=root)
@@ -24,6 +24,7 @@ def main():
     sources=[shared/(n+'.java') for n in ['Source','Result','SearchEngine','TapSequence','LinkHealth']]+list((root/'desktop/src').rglob('*.java'))+[root/'android/tests/LinkHealthTests.java']
     run(tool('javac'),'-encoding','UTF-8','--release','17','-cp',os.pathsep.join(map(str,deps)),'-d',classes,*sources)
     shutil.copy2(root/'android/app/src/main/assets/sources.json',classes/'sources.json')
+    shutil.copytree(root/'desktop/assets',classes/'icons',dirs_exist_ok=True)
     (classes/'fixtures').mkdir()
     for n in ['pansearch','nyaa','3MAG','BTMOVI','ECLSO','ECLZZ']:shutil.copy2(root/('research/probes/'+n+'.txt'),classes/'fixtures'/(n+'.txt'))
     manifest=out/'MANIFEST.MF';manifest.write_text('Manifest-Version: 1.0\nMain-Class: com.btsou.search.DesktopApp\nClass-Path: jsoup-1.18.3.jar json-20240303.jar\n\n')
@@ -32,22 +33,33 @@ def main():
     (app/'licenses').mkdir()
     for p in (root/'android/licenses').iterdir():shutil.copy2(p,app/'licenses'/p.name)
     shutil.copy2(root/'desktop/README.md',app/'README.md')
+    for name in ['7zip-LICENSE.txt','NOTICE.md']:shutil.copy2(root/'desktop/vendor'/name,app/'licenses'/name)
     run(tool('java'),'-jar',app/'Xunyuan.jar','--self-test')
     if not args.package:return
     if os.name!='nt':raise SystemExit('Create Windows packages on Windows, not by cross-compiling on Linux.')
     image=out/'image';installers=out/'release'
     if image.exists():shutil.rmtree(image)
     installers.mkdir(exist_ok=True)
-    run(tool('jpackage'),'--type','app-image','--name','Xunyuan','--app-version',VERSION,'--vendor','Xunyuan','--input',app,'--main-jar','Xunyuan.jar','--main-class','com.btsou.search.DesktopApp','--dest',image,'--add-modules','java.desktop,java.logging,java.naming,java.xml,jdk.crypto.ec','--java-options','-Dfile.encoding=UTF-8','--jlink-options','--strip-debug --no-header-files --no-man-pages')
+    run(tool('jpackage'),'--type','app-image','--name','Xunyuan','--app-version',VERSION,'--vendor','Xunyuan','--input',app,'--main-jar','Xunyuan.jar','--main-class','com.btsou.search.DesktopApp','--dest',image,'--add-modules','java.desktop,jdk.crypto.ec','--java-options','-Dfile.encoding=UTF-8','--jlink-options','--strip-debug --no-header-files --no-man-pages --compress=zip-0','--icon',root/'desktop/assets/Xunyuan.ico')
     # Console launcher exercises the exact packaged runtime/classes before publication.
     run(image/'Xunyuan/runtime/bin/java.exe','-jar',image/'Xunyuan/app/Xunyuan.jar','--self-test')
-    # Bundle the app image into a single, non-installing Windows executable.
-    payload=pathlib.Path(shutil.make_archive(str(out/'payload'),'zip',image))
+    # Solid LZMA2 compresses the uncompressed module image across file boundaries.
+    decoder=root/'desktop/vendor/7zr.exe'
+    decoder_hash='256feca8e274e5da655e2a284fabafd9f554365eb164862089dacd4e8276d282'
+    if hashlib.sha256(decoder.read_bytes()).hexdigest()!=decoder_hash:raise SystemExit('Decoder checksum mismatch')
+    seven=shutil.which('7z') or str(pathlib.Path(os.environ.get('ProgramFiles','C:/Program Files'))/'7-Zip/7z.exe')
+    payload=out/'payload.7z';payload.unlink(missing_ok=True)
+    subprocess.run([seven,'a','-t7z','-mx=9','-m0=LZMA2','-md=64m','-ms=on','-mmt=2',str(payload),'Xunyuan/app','Xunyuan/runtime'],check=True,cwd=image)
     launcher=out/'PortableLauncher.cs'
-    launcher.write_text((root/'desktop/PortableLauncher.cs').read_text(encoding='utf-8').replace('PAYLOAD_SHA256',hashlib.sha256(payload.read_bytes()).hexdigest()),encoding='utf-8-sig')
+    launcher.write_text((root/'desktop/PortableLauncher.cs').read_text(encoding='utf-8').replace('PAYLOAD_SHA256',hashlib.sha256(payload.read_bytes()).hexdigest()).replace('DECODER_SHA256',decoder_hash),encoding='utf-8-sig')
     csc=pathlib.Path(os.environ['WINDIR'])/'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
     target=installers/('Xunyuan-Windows-'+VERSION+'.exe')
-    run(csc,'/nologo','/target:winexe','/platform:x64','/optimize+', '/out:'+str(target),'/win32manifest:'+str(root/'desktop/portable.manifest'),'/reference:System.Windows.Forms.dll','/reference:System.IO.Compression.dll','/reference:System.IO.Compression.FileSystem.dll','/resource:'+str(payload)+',payload.zip',launcher)
+    run(csc,'/nologo','/target:winexe','/platform:x64','/optimize+', '/out:'+str(target),'/win32manifest:'+str(root/'desktop/portable.manifest'),'/win32icon:'+str(root/'desktop/assets/Xunyuan.ico'),'/reference:System.Windows.Forms.dll','/resource:'+str(payload)+',payload.7z','/resource:'+str(decoder)+',7zr.exe',launcher)
+    old_size=26690560
+    report={'version':VERSION,'previousVersion':'0.1.5','previousBytes':old_size,'exeBytes':target.stat().st_size,'reductionPercent':round((1-target.stat().st_size/old_size)*100,1),'decoderSha256':decoder_hash,'compression':'solid LZMA2','iconSizes':[16,24,32,48,64,128,256]}
+    (installers/'build-report.json').write_text(json.dumps(report,indent=2)+'\n')
+    if target.stat().st_size>=old_size:raise SystemExit('Compressed EXE is not smaller than previous version')
+    print(json.dumps(report),flush=True)
     # Test the actual single EXE, including extraction and its bundled runtime.
     run(target,'--self-test')
     lines=[]
