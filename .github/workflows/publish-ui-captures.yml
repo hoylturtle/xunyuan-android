@@ -1,0 +1,26 @@
+name: Share native UI captures
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-ui-captures.yml']
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Android UI screenshots run ID
+        default: '39229984647'
+permissions:
+  actions: read
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          UI_RUN_ID: ${{ inputs.run_id || '39229984647' }}
+        run: |
+          gh run download "$UI_RUN_ID" --name Native-Android-UI --dir ui-captures
+          zip -j ui-captures.zip ui-captures/*
+          gh release view ui-preview > /dev/null 2>&1 || gh release create ui-preview --title '原生安卓界面预览' --notes '模拟器真实截图与布局检查文件。' --prerelease --latest=false
+          gh release upload ui-preview ui-captures.zip --clobber
