@@ -44,7 +44,7 @@ def main():
     # Bundle the app image into a single, non-installing Windows executable.
     payload=pathlib.Path(shutil.make_archive(str(out/'payload'),'zip',image))
     launcher=out/'PortableLauncher.cs'
-    launcher.write_text((root/'desktop/PortableLauncher.cs').read_text().replace('PAYLOAD_SHA256',hashlib.sha256(payload.read_bytes()).hexdigest()),encoding='utf-8-sig')
+    launcher.write_text((root/'desktop/PortableLauncher.cs').read_text(encoding='utf-8').replace('PAYLOAD_SHA256',hashlib.sha256(payload.read_bytes()).hexdigest()),encoding='utf-8-sig')
     csc=pathlib.Path(os.environ['WINDIR'])/'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
     target=installers/('Xunyuan-Windows-'+VERSION+'.exe')
     run(csc,'/nologo','/target:winexe','/platform:x64','/optimize+', '/out:'+str(target),'/win32manifest:'+str(root/'desktop/portable.manifest'),'/reference:System.Windows.Forms.dll','/reference:System.IO.Compression.dll','/reference:System.IO.Compression.FileSystem.dll','/resource:'+str(payload)+',payload.zip',launcher)
