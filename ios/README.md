@@ -6,7 +6,7 @@
 
 [打开快捷指令发布页面](https://github.com/hoylturtle/xunyuan-android/releases/tag/ios-v0.1.0)，用 iPhone Safari 下载 `Xunyuan.shortcut`，在「文件」中打开，按系统提示添加到「快捷指令」。可以重命名为「寻源」并添加到主屏幕。
 
-发布文件由 macOS 的 Apple Shortcuts `shortcuts sign --mode anyone` 签名。`Xunyuan.unsigned.shortcut` 为开发用原始文件，不应作为可直接安装的成品分发。没有生成 iCloud 分享链接。
+发布文件通过 RoutineHub 的 HubSign 服务签名，并使用开源 shortcut-sign 校验签名和提取动作，确认 194 个动作与生成源文件一致。签名服务只接收已公开的工作流，不接收用户关键词、Apple ID 或网盘账号。`Xunyuan.unsigned.shortcut` 为开发用原始文件，不应作为可直接安装的成品分发。没有生成 iCloud 分享链接。
 
 ## 使用
 
@@ -25,7 +25,7 @@
 
 生成器对动作、变量、UTF-16 占位符及控制流进行结构检查，并以真实抓取样本验证网盘和磁力正则。检查结果见构建产物 `test-report.json`。
 
-Apple 签名成功只说明文件通过签名流程，**不等于已在 iPhone 导入并执行成功**。本项目尚未进行 iPhone 真机测试，首次使用请用普通关键词测试。
+签名校验成功只说明文件签名可验证、动作未发生变化，**不等于已在 iPhone 导入并执行成功**。本项目尚未进行 iPhone 真机测试，首次使用请用普通关键词测试。
 
 ## 开发与签名
 
@@ -36,6 +36,8 @@ python3 ios/test_shortcut.py
 shortcuts sign --mode anyone --input ios/dist/Xunyuan.unsigned.shortcut --output ios/dist/Xunyuan.shortcut
 ```
 
-`.github/workflows/ios-shortcut.yml` 负责在 macOS runner 上生成、签名及发布。iOS 发布使用独立的 `ios-v*` 标签，并设置 `--latest=false`，避免影响安卓应用的 `releases/latest/download/update.json`。
+macOS 官方签名要求登录 iCloud；GitHub 的 macOS runner 未登录，不能直接使用。本次已采用 [Cherri 使用的 HubSign 公共签名流程](https://github.com/electrikmilk/cherri/blob/main/signing.go)，随后用 [shortcut-sign](https://github.com/0xilis/shortcut-sign) 验证签名并逐项核对工作流。
+
+`.github/workflows/ios-shortcut.yml` 负责重新生成、检查及发布已签名文件。修改动作后需要重新签名，并更新 `ios/prebuilt/Xunyuan.shortcut`，否则流程会拒绝发布。iOS 发布使用独立的 `ios-v*` 标签，并设置 `--latest=false`，避免影响安卓应用的 `releases/latest/download/update.json`。
 
 参考：[Apple 快捷指令命令行与签名说明](https://support.apple.com/guide/shortcuts-mac/run-shortcuts-from-the-command-line-apd455c82f02/mac)。

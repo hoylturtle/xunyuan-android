@@ -8,17 +8,18 @@ permissions:
   contents: write
 jobs:
   sign:
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Generate and validate native workflow
         run: |
           python3 ios/build_shortcut.py
           python3 ios/test_shortcut.py
-          plutil -lint ios/dist/Xunyuan.unsigned.shortcut
-      - name: Sign with Apple Shortcuts
-        timeout-minutes: 5
-        run: shortcuts sign --mode anyone --input ios/dist/Xunyuan.unsigned.shortcut --output ios/dist/Xunyuan.shortcut
+      - name: Verify signed workflow matches source
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libplist-2.0-4
+          python3 ios/verify_signed.py
       - uses: actions/upload-artifact@v4
         with:
           name: Xunyuan-iOS-Shortcut
