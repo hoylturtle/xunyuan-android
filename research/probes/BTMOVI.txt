@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-type" content="text/html;charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content ="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-transform " />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<meta name="applicable-device" content="pc,mobile">
+<title>ubuntu magnet,torrent,bt下载,迅雷下载_磁力蜘蛛搜索</title>
+<meta name="keywords" content="ubuntu磁力链下载,ubuntubt下载,ubuntu种子下载,ubuntu迅雷下载" />
+<meta name="description" content="磁力蜘蛛搜索(btmovi1.cc)提供最新最全的ubuntu资源下载!" />
+<link rel="stylesheet" href="/static/css/style_v2.css?331" type="text/css"/>
+<script src="/static/css/jquery.min.js"></script>
+<script language="javascript" type="text/javascript">if(top.location!==self.location){top.location.href=self.location.href;}</script><script language="javascript" type="text/javascript">if(location.host != 'www'+'.'+'btmovi1.cc'){location.href = 'http://'+'www'+'.'+'btmovi1.cc'+location.pathname+location.search;}</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7RXJSVLR47"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7RXJSVLR47');
+</script>
+</head>
+
+<body>
+<div id="wrapper">
+    <div class="top-bar"><span class="first"><a href="/" >首页</a></span><span class="top_fav"><a href="desktop.php" target="_blank"><!--牢记短域名：www.btmovi.com &nbsp;-->添加桌面！</a></span></div>
+	<div style="clear:both;"><br></div><div class="header-div"><form class="search-form" action="/" method="post"><a href="/" title="磁力蜘蛛搜索"><img src="/Public/static/img/logomini.gif" alt="磁力蜘蛛搜索" class="nav-logo"></a><input type="text" id="search" title="Search" value="ubuntu" autocomplete="off" name="q" placeholder="世界那么大,我想搜搜看" x-webkit-speech><input type="submit" id="btnSearch" value="搜 索" class="blue"></form></div><div id="sort-bar"><a href="/so/ubuntu_time_1.html" rel="nofollow">时间</a><a href="/so/ubuntu_hits_1.html" rel="nofollow">热门</a><a href="/so/ubuntu_size_1.html" rel="nofollow">大小</a></div><div id="content"><div style="clear:both;"><script type="text/javascript" src="/static/js/xtc.js"></script><br></div><div id="wall">
+<div class="search-statu"><span>大约195条结果，耗时5ms。</span><span></span></div><div class="row"><div class="search-list col-md-8"><div class="search-item"><div class="item-title"><h3><a href="/bt/689e858510c82a5c8043884165257ea34b5ec416.html"><em>ubuntu</em>-12.04-server</a></h3></div><div class="item-list"><em>ubuntu</em>-12.04-server-amd64.iso;<em>ubuntu</em>-12.04-server-i386.iso</div><div class="item-bar"><span class="cpill fileType6">.iso</span><span>创建时间： <b>2014-04-10</b></span><span>
+			                    文件大小：<b class="cpill yellow-pill">1.33 GB</b></span><span>下载热度：<b>44</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/a1e925c1eac8153abc0539de663110e017623411.html">VTC_<em>UBUNTU</em></a></h3></div><div class="item-list">TorrentdownloadedfromDemonoid.com.txt;VTC_<em>UBUNTU</em>.rar</div><div class="item-bar"><span class="cpill fileType6">.rar</span><span>创建时间： <b>2007-02-24</b></span><span>
+			                    文件大小：<b >222.7 MB</b></span><span>下载热度：<b>2</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/e1849011ee3d8d75a1ee4e4904549f16c9ca075d.html"><em>Ubuntu</em> Books</a></h3></div><div class="item-list"><em>Ubuntu</em>Linux-Bible[2007].pdf;Wiley.<em>Ubuntu</em>.Linux.Secrets.Apr.2009.pdf;Beginning<em>Ubuntu</em>Linux-FromNoviceToProfessional(2006).pdf;<em>Ubuntu</em>forNon-Geeks(2ndEd).pdf;<em>Ubuntu</em>Unleashed.chm;TheOfficial<em>Ubuntu</em>Book.chm;</div><div class="item-bar"><span class="cpill fileType0">.pdf</span><span>创建时间： <b>2010-06-04</b></span><span>
+			                    文件大小：<b >166.03 MB</b></span><span>下载热度：<b>4</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/07a7bbc36818245bf53f1fe8219a8771246cf692.html"><em>Ubuntu</em> Made Easy.7z</a></h3></div><div class="item-list"><em>Ubuntu</em>MadeEasy.7z</div><div class="item-bar"><span class="cpill fileType0">.7z</span><span>创建时间： <b>2013-05-15</b></span><span>
+			                    文件大小：<b >12.26 MB</b></span><span>下载热度：<b>8</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/cb8c0c9b486ae6bd257f5fdf41bd8cf8dcd893e9.html">CBT Nuggets - <em>Ubuntu</em></a></h3></div><div class="item-list">12-ServicesFile&Print.mp4;13-ServicesSSH.mp4;05-InitialSetupConsiderations.mp4;03-HardDrives&Partitions.mp4;09-ServicesDNS&DHCP.mp4;11-ServicesMail&POP3-IMAP.mp4;06-PackageManagement.mp4;10-ServicesWe</div><div class="item-bar"><span class="cpill fileType1">.mp4</span><span>创建时间： <b>2013-08-25</b></span><span>
+			                    文件大小：<b class="cpill yellow-pill">1.91 GB</b></span><span>下载热度：<b>29</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/abd1d2648c97958789d62f6a6a1f5d33f4eff5be.html"><em>Ubuntu</em> Linux Toolbox - 1000+ Commands for <em>Ubuntu</em> a</a></h3></div><div class="item-list"><em>Ubuntu</em>LinuxToolbox-1000+Commands.tgz;TorrentdownloadedfromAhaShare.com.txt;TorrentDownloadedFromExtraTorrent.com.txt</div><div class="item-bar"><span class="cpill fileType6">.tgz</span><span>创建时间： <b>2013-12-05</b></span><span>
+			                    文件大小：<b >6.69 MB</b></span><span>下载热度：<b>4</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/5a444b3fc5bd2bde480ddb4b086834e6127aa306.html"><em>Ubuntu</em> Linux Toolbox - 1000+ Commands for <em>Ubuntu</em> a</a></h3></div><div class="item-list">tracked_by_h33t_com.txt;<em>Ubuntu</em>.Linux.Toolbox-2nd.Edition.tgz;TorrentdownloadedfromAhaShare.com.txt;TorrentDownloadedFromExtraTorrent.cc.txt</div><div class="item-bar"><span class="cpill fileType6">.tgz</span><span>创建时间： <b>2013-12-05</b></span><span>
+			                    文件大小：<b >6.69 MB</b></span><span>下载热度：<b>5</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/05341204cc7e28ab77770a3504731bd96967b6f8.html">VTC - <em>Ubuntu</em> Certification</a></h3></div><div class="item-list">TorrentdownloadedfromDemonoid.com.txt;i-vubcert.nfo;i-vubcert.r00;i-vubcert.r01;i-vubcert.r02;i-vubcert.r03;i-vubcert.r04;i-vubcert.r05;i-vubcert.r06;i-vubcert.r07;i-vubcert.r08;i-vubcert.r09;i-vubcer</div><div class="item-bar"><span class="cpill fileType6">.rar</span><span>创建时间： <b>2009-01-25</b></span><span>
+			                    文件大小：<b >267.45 MB</b></span><span>下载热度：<b>2</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/d203115be095f73992ec86a68509cbc8e1a4b029.html"><em>ubuntu</em>-12.04-desktop</a></h3></div><div class="item-list"><em>ubuntu</em>-12.04-desktop-i386.iso;<em>ubuntu</em>-12.04-desktop-amd64.iso</div><div class="item-bar"><span class="cpill fileType6">.iso</span><span>创建时间： <b>2012-08-16</b></span><span>
+			                    文件大小：<b class="cpill yellow-pill">1.37 GB</b></span><span>下载热度：<b>11</b></span></div></div><div class="search-item"><div class="item-title"><h3><a href="/bt/bfcf4d10eafb6d9538056ddc02caa0b5df6bdd9f.html"><em>Ubuntu</em> Linux - Bible [2007]</a></h3></div><div class="item-list"><em>Ubuntu</em>Linux-Bible[2007].pdf;<em>Ubuntu</em>LinuxBible~tqw~.nfo</div><div class="item-bar"><span class="cpill fileType0">.pdf</span><span>创建时间： <b>2008-01-04</b></span><span>
+			                    文件大小：<b >44.52 MB</b></span><span>下载热度：<b>5</b></span></div></div><ul class="pagination"><li class="active"><span>1</span></li><li ><a href="/so/ubuntu_rel_2.html">2</a></li><li ><a href="/so/ubuntu_rel_3.html">3</a></li><li ><a href="/so/ubuntu_rel_4.html">4</a></li><li ><a href="/so/ubuntu_rel_5.html">5</a></li><li ><a href="/so/ubuntu_rel_6.html">6</a></li><li ><a href="/so/ubuntu_rel_7.html">7</a></li><li class="nextpage"><a href="/so/ubuntu_rel_2.html">&raquo;</a></li><li class="last_p"><a href="/so/ubuntu_rel_20.html">Last</a></ul></div><div class="search-tips col-md-2">
+<div class="search-notice">ubuntu磁力链,ubuntu magnet相关结果来源于网络蜘蛛，由用户的指令自动获得，本站并没有储存任何数据，亦不对结果承担任何责任！本站已经屏蔽了99%的非法链接，如发现非法，侵权的内容请在线举报，谢谢合作！ </div>
+       <div id="latest-search">
+        <span class="latest-desc"><a>大家都在搜：</a><a href="http://www.eclzz.bar/s/ubuntu.html" target="_blank">蜘蛛资源</a><a href="http://www.wangpans.com/q/ubuntu.html" target="_blank">网盘资源</a><a href="http://eclyq.rest/sou/ubuntu.html" target="_blank">磁力引擎</a><a href="http://www.kcbook.pro/" target="_blank">蚂蚁资源</a><a href="http://www.mmkx8.xyz/" target="_blank">影视资源</a><a href="http://www.chongshengxs.com/" target="_blank">小说资源</a><a href="http://7tp.net/" target="_blank">云盘资源</a><a href="http://www.ciligogo.site/search/ubuntu.html" target="_blank">磁力狗狗</a><a href="http://www.xbqgxs.net/" target="_blank">免费小说</a><a href="http://www.4qo.pro/" target="_blank">美女图片</a></span>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+<div class="footer"><span>特别提示：本站不存储任何资源内容，只收集磁力链接及BT种子元数据。 网站不提供种子下载服务，也不对BT种子真实性及合法性负责，请用户注意甄别！<br>&copy;2026 <a href="/" >磁力蜘蛛搜索</a> &nbsp;&nbsp;友情链接：<a href="http://www.eclyun.cc/" target="_blank">磁力云搜索</a> &nbsp;<a href="http://www.eclzz.bar/" target="_blank">磁力蜘蛛</a></span></div>
+<div id="rand_content"><div class="rand_content" id="show_rand"><ul></ul></div></div>
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+<!-- Matomo -->
+<script>
+  var _paq = window._paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//www.14t.xyz/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '4']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->
+</body>
+</html><script src='/static/js/xt.js'></script><script src='/static/js/xf.js'></script>

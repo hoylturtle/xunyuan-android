@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "versionCode": 3,
+  "name": "寻源",
+  "github": "https://github.com/hoylturtle/xunyuan-android",
+  "checks": 204,
+  "androidMin": 26,
+  "androidTarget": 35,
+  "deviceTested": false,
+  "updateManifest": "https://github.com/hoylturtle/xunyuan-android/releases/latest/download/update.json",
+  "initialReleasePublished": false,
+  "apkSha256": "abe3c743b03cec3ea5c8d624e741576e78ba39890af65a6b59df941cd90e44fe"
+}

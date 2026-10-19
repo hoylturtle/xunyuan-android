@@ -1,0 +1,11 @@
+tools/
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/signing/
+android/tests/classes/
+__pycache__/
+*.part
+*.jks
+*.keystore

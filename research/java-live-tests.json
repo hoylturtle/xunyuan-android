@@ -1,0 +1,43 @@
+{
+  "sources": [
+    {
+      "ms": 3442,
+      "page2New": 58,
+      "page2Results": 59,
+      "id": "pansearch",
+      "results": 75
+    },
+    {
+      "ms": 899,
+      "id": "nyaa",
+      "results": 1
+    },
+    {
+      "detailMagnet": true,
+      "ms": 1108,
+      "id": "3MAG",
+      "results": 29
+    },
+    {
+      "ms": 611,
+      "id": "BTMOVI",
+      "results": 10
+    },
+    {
+      "ms": 638,
+      "id": "ECLSO",
+      "results": 10
+    },
+    {
+      "ms": 504,
+      "id": "ECLZZ",
+      "results": 10
+    }
+  ],
+  "cloudTypes": [
+    "百度",
+    "夸克",
+    "阿里"
+  ],
+  "timestamp": "2026-10-19T08:30:04.679946723Z"
+}

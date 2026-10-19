@@ -1,0 +1,54 @@
+name: Build and release Android
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install SDK components
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Restore signing key
+        if: github.event_name != 'pull_request'
+        env:
+          SIGNING_KEY_B64: ${{ secrets.ANDROID_SIGNING_KEY_B64 }}
+        run: |
+          if [ -z "$SIGNING_KEY_B64" ]; then
+            echo 'Missing Android signing key secret'
+            exit 1
+          fi
+          mkdir -p android/signing
+          printf '%s' "$SIGNING_KEY_B64" | base64 --decode > android/signing/btsou-development.jks
+          chmod 600 android/signing/btsou-development.jks
+      - name: Parser and updater metadata tests
+        run: python3 android/test.py
+      - name: Build signed APK
+        run: python3 android/build_apk.py
+      - name: Generate updater metadata
+        run: python3 scripts/make_update.py --repo "$GITHUB_REPOSITORY"
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Xunyuan-Android
+          path: |
+            android/build/Xunyuan-*.apk
+            android/build/update.json
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v') && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/make_update.py --repo "$GITHUB_REPOSITORY" --tag "$GITHUB_REF_NAME"
+          gh release create "$GITHUB_REF_NAME" android/build/Xunyuan-*.apk android/build/update.json --title "寻源 $GITHUB_REF_NAME" --generate-notes
