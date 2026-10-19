@@ -26,8 +26,10 @@ jobs:
           SIGNING_KEY_B64: ${{ secrets.ANDROID_SIGNING_KEY_B64 }}
         run: |
           if [ -z "$SIGNING_KEY_B64" ]; then
-            echo 'Missing Android signing key secret'
-            exit 1
+            case "$GITHUB_REF" in
+              refs/tags/v*) echo 'Missing Android signing key secret for release'; exit 1 ;;
+              *) echo 'No release key: building a development-only APK'; exit 0 ;;
+            esac
           fi
           mkdir -p android/signing
           printf '%s' "$SIGNING_KEY_B64" | base64 --decode > android/signing/btsou-development.jks
@@ -41,7 +43,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Xunyuan-Android
+          name: Xunyuan-Android-${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'development' }}
           path: |
             android/build/Xunyuan-*.apk
             android/build/update.json
