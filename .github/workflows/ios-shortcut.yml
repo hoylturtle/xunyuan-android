@@ -1,0 +1,31 @@
+name: Sign iOS shortcut
+on:
+  push:
+    branches: [main]
+    paths: ['ios/**', '.github/workflows/ios-shortcut.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sign:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate and validate native workflow
+        run: |
+          python3 ios/build_shortcut.py
+          python3 ios/test_shortcut.py
+          plutil -lint ios/dist/Xunyuan.unsigned.shortcut
+      - name: Sign with Apple Shortcuts
+        timeout-minutes: 5
+        run: shortcuts sign --mode anyone --input ios/dist/Xunyuan.unsigned.shortcut --output ios/dist/Xunyuan.shortcut
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Xunyuan-iOS-Shortcut
+          path: ios/dist/*
+      - name: Publish independent iOS release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view ios-v0.1.0 > /dev/null 2>&1 || gh release create ios-v0.1.0 --title '寻源 iOS 快捷指令 0.1.0' --notes-file ios/RELEASE_NOTES.md --latest=false
+          gh release upload ios-v0.1.0 ios/dist/Xunyuan.shortcut ios/README.md --clobber

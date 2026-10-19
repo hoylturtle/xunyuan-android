@@ -9,3 +9,4 @@ __pycache__/
 *.part
 *.jks
 *.keystore
+ios/dist/
