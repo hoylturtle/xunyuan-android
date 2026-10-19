@@ -20,6 +20,12 @@ public final class DesktopTests {
         check(!Result.safeUrl("file:///C:/Windows/system.ini"),"local file denied");check(!Result.safeUrl("javascript:alert(1)"),"script denied");
         check(!Result.safeUrl("https://user:password@example.com/path"),"URL credentials denied");
         Result adult=new Result();adult.title="NSFW sample";adult.url="https://example.com/";check(!adult.visible(false),"adult filtered");check(adult.visible(true),"adult explicitly enabled");
+        for(String title:Arrays.asList("淫荡蜘蛛侠", "淫蕩蜘蛛俠", "淫·荡蜘蛛侠", "淫\u200b荡蜘蛛侠")){
+            Result leaked=new Result();leaked.title=title;leaked.kind="夸克";leaked.password="1234";
+            check(!DesktopFilters.accepts(leaked,"全部资源",false,false),"ordinary mode blocks reported title");
+            check(!DesktopFilters.accepts(leaked,"夸克",true,false),"cloud and code filters cannot bypass adult gate");
+            check(leaked.visible(true),"explicit expanded mode permits adult title");
+        }
         Result normal=new Result();normal.title="Python programming";normal.url="https://example.com/";check(normal.visible(false),"ordinary result retained");
         check(Result.cloudType("https://pan.xunlei.com/s/demo?pwd=abcd").equals("迅雷"),"Xunlei classification");
         check(Result.cloudType("https://115cdn.com/s/demo").equals("115"),"115 CDN classification");

@@ -28,8 +28,24 @@ public final class EngineTests {
             JSONObject invalid=new JSONObject(update.toString());invalid.put(key,key.equals("sha256")?"invalid":key.equals("apkUrl")?"http://example.com/update.apk":-1);
             boolean bad=false;try{new UpdateInfo(invalid.toString());}catch(Exception e){bad=true;}check(bad,"reject invalid update field "+key);
         }
+        String spiderFixture=read(root.resolve("research/probes/nyaa.txt"));
+        // Keep the real source HTML shape, replacing only the resource title.
+        org.jsoup.nodes.Document spiderDoc=org.jsoup.Jsoup.parse(spiderFixture);
+        for(org.jsoup.nodes.Element link:spiderDoc.select("a[href^=/view/]"))if(!link.text().trim().isEmpty())link.text("淫荡蜘蛛侠");
+        List<Result> spiderParsed=SearchEngine.parse(by.get("nyaa"),spiderDoc.html(),"https://nyaa.si/");
+        check(!spiderParsed.isEmpty(),"reported title parsed from real source markup");
+        for(Result r:spiderParsed)check(r.adult&&!r.visible(false)&&r.visible(true),"parsed reported title gated before display");
         boolean insecure=false;try{UpdateInfo.requireHttps("https://user:secret@example.com/a.apk");}catch(Exception e){insecure=true;}check(insecure,"no userinfo in update URL");
         check(Result.adultText("SSIS-123 sample"),"catalog adult classification");
+        for(String title:Arrays.asList("淫荡蜘蛛侠", "淫蕩蜘蛛俠", "蜘蛛侠 淫 乱版", "淫·荡蜘蛛侠", "淫\u200b荡蜘蛛侠", "蜘蛛侠 ＮＳＦＷ", "蜘蛛侠 无码", "蜘蛛侠 乱伦", "蜘蛛侠 av女优")){
+            Result leaked=new Result();leaked.title=title;
+            check(Result.adultText(title),"adult title classified: "+title);
+            check(!leaked.visible(false)&&leaked.visible(true),"mode gates title: "+title);
+            check(!Result.from(leaked.json()).visible(false),"legacy saved title filtered: "+title);
+        }
+        for(String title:Arrays.asList("蜘蛛侠：英雄无归 1080P", "蜘蛛俠：縱橫宇宙", "超凡蜘蛛侠", "Java programming", "蜘蛛侠 动画合集"))
+            check(!Result.adultText(title),"ordinary search result preserved: "+title);
+
         check(!Result.adultText("Python basics and Java development"),"ordinary title allowed");
         Result marked=new Result();marked.title="ordinary title";marked.adult=true;check(!marked.visible(false)&&marked.visible(true),"source flag is enforced");
         for(String bad:Arrays.asList("javascript:alert(1)","intent://x","file:///etc/passwd","https://user:pass@example.com/a","magnet:?xt=invalid","https://pan.quark.cn.evil.test/s/abc")){

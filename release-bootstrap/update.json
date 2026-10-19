@@ -1,8 +1,8 @@
 {
-  "versionCode": 6,
-  "versionName": "0.3.2",
-  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.3.2/Xunyuan-0.3.2.apk",
-  "sha256": "8f2decb6c4cf0eba7905c4654817656d18aac9b262c47c24ff308390e47b04cd",
+  "versionCode": 7,
+  "versionName": "0.3.3",
+  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.3.3/Xunyuan-0.3.3.apk",
+  "sha256": "ee3b9730899ef3460e4d920d4bbd6f199c7172b1f72702e3b73543815e6dd7aa",
   "apkSize": 225897,
-  "notes": "默认尝试全部普通来源；自动隐藏明确失效的网盘分享，暂未确认的保留标注；缓存与渐进显示减少重复访问。"
+  "notes": "修复普通模式漏出成人标题的问题，增强简繁体与变体过滤，同时覆盖搜索结果和旧收藏。"
 }
