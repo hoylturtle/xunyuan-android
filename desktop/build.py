@@ -50,9 +50,8 @@ def main():
     if hashlib.sha256(decoder.read_bytes()).hexdigest()!=decoder_hash:raise SystemExit('Decoder checksum mismatch')
     seven=shutil.which('7z') or str(pathlib.Path(os.environ.get('ProgramFiles','C:/Program Files'))/'7-Zip/7z.exe')
     # The launcher in the app image is redundant: our portable shell starts javaw.
-    (image/'Xunyuan/Xunyuan.exe').unlink(missing_ok=True)
     payload=out/'payload.7z';payload.unlink(missing_ok=True)
-    subprocess.run([seven,'a','-t7z','-mx=9','-m0=LZMA2','-md=64m','-ms=on','-mmt=2',str(payload),'Xunyuan'],check=True,cwd=image)
+    subprocess.run([seven,'a','-t7z','-mx=9','-m0=LZMA2','-md=64m','-ms=on','-mmt=2',str(payload),'Xunyuan','-xr!Xunyuan.exe'],check=True,cwd=image)
     launcher=out/'PortableLauncher.cs'
     launcher.write_text((root/'desktop/PortableLauncher.cs').read_text(encoding='utf-8').replace('PAYLOAD_SHA256',hashlib.sha256(payload.read_bytes()).hexdigest()).replace('DECODER_SHA256',decoder_hash),encoding='utf-8-sig')
     csc=pathlib.Path(os.environ['WINDIR'])/'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
