@@ -1,8 +1,8 @@
 {
-  "versionCode": 3,
-  "versionName": "0.2.0",
-  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.2.0/Xunyuan-0.2.0.apk",
-  "sha256": "abe3c743b03cec3ea5c8d624e741576e78ba39890af65a6b59df941cd90e44fe",
-  "apkSize": 213609,
-  "notes": "应用更名为寻源；增加 GitHub Releases 在线更新、更新文件与签名校验；保留磁力和网盘搜索功能。"
+  "versionCode": 4,
+  "versionName": "0.3.0",
+  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.3.0/Xunyuan-0.3.0.apk",
+  "sha256": "0e93ef1273cc376ab4c477afe1d6b56d340df77c86bc2b9f1e8b15a923844775",
+  "apkSize": 221801,
+  "notes": "界面优化：图标导航、关键词快捷搜索、清晰的结果卡片、备用来源折叠、分组设置；修复结果返回时滚动位置跳动。"
 }

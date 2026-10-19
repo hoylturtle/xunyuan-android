@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0",
-  "versionCode": 3,
+  "version": "0.3.0",
+  "versionCode": 4,
   "name": "寻源",
   "github": "https://github.com/hoylturtle/xunyuan-android",
   "checks": 204,
@@ -9,8 +9,12 @@
   "deviceTested": false,
   "updateManifest": "https://github.com/hoylturtle/xunyuan-android/releases/latest/download/update.json",
   "initialReleasePublished": true,
-  "apkSha256": "abe3c743b03cec3ea5c8d624e741576e78ba39890af65a6b59df941cd90e44fe",
+  "apkSha256": "0e93ef1273cc376ab4c477afe1d6b56d340df77c86bc2b9f1e8b15a923844775",
   "publicUpdateEndpointVerified": true,
-  "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/v0.2.0",
-  "automaticSigningSecretConfigured": false
+  "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/v0.3.0",
+  "automaticSigningSecretConfigured": false,
+  "androidEmulatorTested": true,
+  "androidEmulatorApi": 30,
+  "physicalDeviceTested": false,
+  "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39232188709"
 }
