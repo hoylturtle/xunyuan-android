@@ -5,6 +5,15 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Windows.Forms;
 
+// File properties identify the project; publisher identity requires Authenticode.
+[assembly: AssemblyTitle("寻源")]
+[assembly: AssemblyProduct("寻源")]
+[assembly: AssemblyDescription("寻源 · 网盘与磁力搜索工具")]
+[assembly: AssemblyCompany("Xunyuan project")]
+[assembly: AssemblyVersion("APP_VERSION.0")]
+[assembly: AssemblyFileVersion("APP_VERSION.0")]
+[assembly: AssemblyInformationalVersion("APP_VERSION")]
+
 // Single portable EXE: checksum-verified bundled 7zr extracts the solid archive.
 // The standalone decoder is public domain; no installation or elevation.
 internal static class PortableLauncher {

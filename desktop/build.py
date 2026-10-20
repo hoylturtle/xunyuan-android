@@ -3,13 +3,14 @@
 import argparse,hashlib,os,pathlib,shutil,subprocess,sys,json,zipfile
 root=pathlib.Path(__file__).resolve().parent.parent
 out=root/'desktop/build';classes=out/'classes';app=out/'app'
-VERSION='0.3.0'
+VERSION='0.3.1'
 
 def run(*args):
     subprocess.run([str(x) for x in args],check=True,cwd=root)
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--package',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--package',action='store_true');parser.add_argument('--sign-thumbprint',help='Existing trusted Windows certificate in CurrentUser/My');args=parser.parse_args()
+    if args.sign_thumbprint and not args.package:parser.error('--sign-thumbprint requires --package')
     jdk=os.environ.get('JAVA_HOME','')
     def tool(name):
         return pathlib.Path(jdk)/'bin'/(name+('.exe' if os.name=='nt' else '')) if jdk else name
@@ -41,7 +42,8 @@ def main():
     if os.name!='nt':raise SystemExit('Create Windows packages on Windows, not by cross-compiling on Linux.')
     image=out/'image';installers=out/'release'
     if image.exists():shutil.rmtree(image)
-    installers.mkdir(exist_ok=True)
+    if installers.exists():shutil.rmtree(installers)
+    installers.mkdir()
     run(tool('jpackage'),'--type','app-image','--name','Xunyuan','--app-version',VERSION,'--vendor','Xunyuan','--input',app,'--main-jar','Xunyuan.jar','--main-class','com.btsou.search.DesktopApp','--dest',image,'--add-modules','java.desktop,jdk.crypto.ec','--java-options','-Dfile.encoding=UTF-8','--jlink-options','--strip-debug --no-header-files --no-man-pages --compress=zip-0','--icon',root/'desktop/assets/Xunyuan.ico')
     # Console launcher exercises the exact packaged runtime/classes before publication.
     run(image/'Xunyuan/runtime/bin/java.exe','-jar',image/'Xunyuan/app/Xunyuan.jar','--self-test')
@@ -54,12 +56,14 @@ def main():
     payload=out/'payload.7z';payload.unlink(missing_ok=True)
     subprocess.run([seven,'a','-t7z','-mx=9','-m0=LZMA2','-md=64m','-ms=on','-mmt=2',str(payload),'Xunyuan','-xr!Xunyuan.exe'],check=True,cwd=image)
     launcher=out/'PortableLauncher.cs'
-    launcher.write_text((root/'desktop/PortableLauncher.cs').read_text(encoding='utf-8').replace('PAYLOAD_SHA256',hashlib.sha256(payload.read_bytes()).hexdigest()).replace('DECODER_SHA256',decoder_hash),encoding='utf-8-sig')
+    launcher.write_text((root/'desktop/PortableLauncher.cs').read_text(encoding='utf-8').replace('PAYLOAD_SHA256',hashlib.sha256(payload.read_bytes()).hexdigest()).replace('DECODER_SHA256',decoder_hash).replace('APP_VERSION',VERSION),encoding='utf-8-sig')
     csc=pathlib.Path(os.environ['WINDIR'])/'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
-    target=installers/('Xunyuan-Windows-'+VERSION+'.exe')
+    target=installers/'Xunyuan.exe'
     run(csc,'/nologo','/target:winexe','/platform:x64','/optimize+', '/out:'+str(target),'/win32manifest:'+str(root/'desktop/portable.manifest'),'/win32icon:'+str(root/'desktop/assets/Xunyuan.ico'),'/reference:System.Windows.Forms.dll','/resource:'+str(payload)+',payload.7z','/resource:'+str(decoder)+',7zr.exe',launcher)
+    if args.sign_thumbprint:
+        run(sys.executable,root/'desktop/sign_windows.py',target,'--thumbprint',args.sign_thumbprint)
     old_size=26690560
-    report={'version':VERSION,'previousVersion':'0.1.5','previousBytes':old_size,'exeBytes':target.stat().st_size,'reductionPercent':round((1-target.stat().st_size/old_size)*100,1),'decoderSha256':decoder_hash,'compression':'solid LZMA2','iconSizes':[16,24,32,48,64,128,256]}
+    report={'version':VERSION,'executableName':target.name,'signingRequested':bool(args.sign_thumbprint),'previousVersion':'0.1.5','previousBytes':old_size,'exeBytes':target.stat().st_size,'reductionPercent':round((1-target.stat().st_size/old_size)*100,1),'decoderSha256':decoder_hash,'compression':'solid LZMA2','iconSizes':[16,24,32,48,64,128,256]}
     (installers/'build-report.json').write_text(json.dumps(report,indent=2)+'\n')
     if target.stat().st_size>=old_size:raise SystemExit('Compressed EXE is not smaller than previous version')
     print(json.dumps(report),flush=True)
