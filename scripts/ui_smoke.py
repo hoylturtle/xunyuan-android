@@ -67,7 +67,15 @@ def screens(apk,prefix):
             tap(current);tap(category)
             assert '分类：'+category in dump(),'Category selection must remain visible'
         tap('来源');assert '官方来源 v2' in dump(),'Source catalog version visible'
-        tap('检查来源更新');time.sleep(4);capture(prefix,'source-updates');tap('搜索')
+        tap('检查来源更新');time.sleep(4)
+        source_nodes=list(ET.fromstring(dump()).iter('node'))
+        update=next(n for n in source_nodes if n.get('text') in ['检查来源更新','正在检查来源…'])
+        rollback=next(n for n in source_nodes if n.get('text')=='回退上次来源')
+        update_bounds=list(map(int,re.findall(r'\d+',update.get('bounds'))))
+        rollback_bounds=list(map(int,re.findall(r'\d+',rollback.get('bounds'))))
+        assert rollback_bounds[1]-update_bounds[3]>=12,'Source buttons must have a visible gap'
+        assert update_bounds[3]-update_bounds[1]>=48 and rollback_bounds[3]-rollback_bounds[1]>=48,'Source actions must have sufficient touch height'
+        capture(prefix,'source-updates');tap('搜索')
         tap('筛选与排序')
         tap('结果内包含词，多个词以空格分隔');adb('shell','input','text','Ubuntu')
         tap('应用');tap('筛选与排序');assert 'Ubuntu' in dump(),'Refine fields must survive reopening'
