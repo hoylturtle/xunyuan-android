@@ -24,6 +24,9 @@ jobs:
       - name: Exercise desktop and pagination on Windows
         shell: pwsh
         run: |
+          # Keep console diagnostics if a UI assertion fails inside the GUI EXE.
+          & "$env:JAVA_HOME/bin/java.exe" -jar desktop/build/app/Xunyuan.jar --smoke-test
+          if ($LASTEXITCODE -ne 0) { throw 'Desktop UI assertions failed (see Java diagnostics above)' }
           $process = Start-Process -FilePath desktop/build/release/Xunyuan-Windows-0.2.0.exe -ArgumentList '--smoke-test' -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw 'Single EXE smoke test failed' }
           if (-not (Test-Path desktop-smoke.png)) { throw 'Desktop screenshot missing' }

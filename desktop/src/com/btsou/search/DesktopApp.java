@@ -183,7 +183,7 @@ public final class DesktopApp {
         testTitleClick();
         if(adultEnabled||sourceRows.get("sukebei").isVisible()||sourceChecks.get("sukebei").isSelected()||!collected.isEmpty()||!visible.isEmpty()||!query.getText().isEmpty()||!diagnostics.getText().isEmpty()||!favoriteModel.isEmpty())throw new AssertionError("Lock did not clear or hide sensitive state");
         favorites.remove(sensitive.key());confirmAdult=originalConfirm;
-        for(int i=1;i<=31;i++){Result r=new Result();r.title="Windows 界面测试资源 "+i;r.kind=i%2==0?"百度":"bt";r.source="离线测试数据";r.password=i%2==0?"abcd":"";r.url=i%2==0?"https://pan.baidu.com/s/demo"+i:"magnet:?xt=urn:btih:"+String.format("%040x",i);visible.add(r);collected.put(r.key(),r);}browsing=true;paintResults();
+        for(int i=1;i<=31;i++){Result r=new Result();r.title="界面测试资源 "+i;r.kind=i%2==0?"百度":"bt";r.source="离线测试数据";r.password=i%2==0?"abcd":"";r.url=i%2==0?"https://pan.baidu.com/s/demo"+i:"magnet:?xt=urn:btih:"+String.format("%040x",i);visible.add(r);collected.put(r.key(),r);}browsing=true;paintResults();
         if(frame.getIconImages().size()!=5)throw new AssertionError("Window icons missing");
         if(adultEnabled||resultModel.size()!=15)throw new AssertionError("Initial UI state");
         next.doClick();if(displayPage!=1||resultModel.size()!=15||!resultModel.get(0).title.endsWith("16"))throw new AssertionError("Next 15 results");
