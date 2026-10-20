@@ -5,9 +5,9 @@ root=pathlib.Path(__file__).resolve().parent
 jdk=pathlib.Path(os.environ.get('JAVA_HOME',str(next((root.parent/'tools').glob('zulu*'),root.parent/'tools/jdk'))))
 out=root/'tests/classes';out.mkdir(exist_ok=True)
 cp=os.pathsep.join(str(root/p) for p in ['app/libs/jsoup-1.18.3.jar','tests/json-20240303.jar'])
-sources=[str(root/'app/src/main/java/com/btsou/search'/n) for n in ['Source.java','Result.java','SearchEngine.java','CloudApps.java','UpdateInfo.java','TapSequence.java','LinkHealth.java']]+[str(p) for p in (root/'tests').glob('*.java')]
+sources=[str(root/'app/src/main/java/com/btsou/search'/n) for n in ['Source.java','Result.java','SearchEngine.java','CloudApps.java','UpdateInfo.java','TapSequence.java','LinkHealth.java','ResultTools.java']]+[str(p) for p in (root/'tests').glob('*.java')]
 subprocess.run([str(jdk/'bin/javac'),'--release','8','-encoding','UTF-8','-cp',cp,'-d',str(out)]+sources,check=True)
-for test in (['EngineTests','com.btsou.search.LinkHealthTests','LiveTests'] if '--live' in sys.argv else ['EngineTests','com.btsou.search.LinkHealthTests']):
+for test in (['EngineTests','com.btsou.search.LinkHealthTests','com.btsou.search.ResultToolsTests','LiveTests'] if '--live' in sys.argv else ['EngineTests','com.btsou.search.LinkHealthTests','com.btsou.search.ResultToolsTests']):
     trust=[]
     if os.environ.get('BTSOU_TEST_TRUSTSTORE'):
         trust=['-Djavax.net.ssl.trustStore='+os.environ['BTSOU_TEST_TRUSTSTORE']]

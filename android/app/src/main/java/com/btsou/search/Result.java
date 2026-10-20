@@ -8,6 +8,7 @@ import org.json.*;
 
 public final class Result {
     public String title="",url="",pageUrl="",size="",date="",password="",source="",kind="bt";
+    public String collectionGroup="",note="";
     public boolean adult;
     public String linkState="unknown",linkMessage="尚未检查";
     public long linkCheckedAt=0;
@@ -51,7 +52,7 @@ public final class Result {
         String normalized=Normalizer.normalize(text,Normalizer.Form.NFKC).replaceAll("[\\p{Cf}\\p{M}]", "");
         return ADULT.matcher(normalized).find()||ADULT.matcher(HAN_GAPS.matcher(normalized).replaceAll("")).find();
     }
-    public boolean visible(boolean allowAdult){return allowAdult||(!adult&&!adultText(title));}
+    public boolean visible(boolean allowAdult){return allowAdult||(!adult&&!adultText(title)&&!adultText(collectionGroup)&&!adultText(note));}
     /** Merge duplicate links without losing a code found by a later source. */
     public static Result mergeKnown(Result first,Result later){
         if(first.password.isEmpty()&&!later.password.isEmpty())first.password=later.password;
@@ -60,7 +61,7 @@ public final class Result {
         return first;
     }
     public JSONObject json() throws JSONException {
-        JSONObject j=new JSONObject(); j.put("title",title);j.put("url",url);j.put("pageUrl",pageUrl);j.put("size",size);j.put("date",date);j.put("password",password);j.put("source",source);j.put("kind",kind);j.put("adult",adult);j.put("linkState",linkState);j.put("linkMessage",linkMessage);j.put("linkCheckedAt",linkCheckedAt);return j;
+        JSONObject j=new JSONObject(); j.put("collectionGroup",collectionGroup);j.put("note",note);j.put("title",title);j.put("url",url);j.put("pageUrl",pageUrl);j.put("size",size);j.put("date",date);j.put("password",password);j.put("source",source);j.put("kind",kind);j.put("adult",adult);j.put("linkState",linkState);j.put("linkMessage",linkMessage);j.put("linkCheckedAt",linkCheckedAt);return j;
     }
-    public static Result from(JSONObject j){Result r=new Result();r.title=j.optString("title");r.url=j.optString("url");r.pageUrl=j.optString("pageUrl");r.size=j.optString("size");r.date=j.optString("date");r.password=j.optString("password");r.source=j.optString("source");r.kind=j.optString("kind","bt");r.adult=j.optBoolean("adult");r.linkState=j.optString("linkState","unknown");r.linkMessage=j.optString("linkMessage","尚未检查");r.linkCheckedAt=j.optLong("linkCheckedAt");return r;}
+    public static Result from(JSONObject j){Result r=new Result();r.collectionGroup=j.optString("collectionGroup");r.note=j.optString("note");r.title=j.optString("title");r.url=j.optString("url");r.pageUrl=j.optString("pageUrl");r.size=j.optString("size");r.date=j.optString("date");r.password=j.optString("password");r.source=j.optString("source");r.kind=j.optString("kind","bt");r.adult=j.optBoolean("adult");r.linkState=j.optString("linkState","unknown");r.linkMessage=j.optString("linkMessage","尚未检查");r.linkCheckedAt=j.optLong("linkCheckedAt");return r;}
 }

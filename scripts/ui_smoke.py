@@ -61,6 +61,17 @@ def screens(apk,prefix):
         tap('搜索');title_taps();tap('我已满18岁，开启')
         adb('shell','am','force-stop','com.btsou.search');adb('shell','am','start','-n','com.btsou.search/.MainActivity');time.sleep(2)
         assert '直连搜索 · 普通模式' in dump(),'Process restart must reset mode'
+    if prefix=='after':
+        for category in ['电影','电视剧','电子书','软件','不限制']:
+            current=next(n.get('text') for n in ET.fromstring(dump()).iter('node') if n.get('text','').startswith('分类：'))
+            tap(current);tap(category)
+            assert '分类：'+category in dump(),'Category selection must remain visible'
+        tap('筛选与排序')
+        tap('结果内包含词，多个词以空格分隔');adb('shell','input','text','Ubuntu')
+        tap('应用');tap('筛选与排序');assert 'Ubuntu' in dump(),'Refine fields must survive reopening'
+        tap('重置');tap('筛选与排序');assert 'Ubuntu' not in dump(),'Reset must clear include terms'
+        tap('取消');capture(prefix,'filters')
+        tap('收藏');tap('搜索收藏');tap('显示全部');capture(prefix,'favorites-tools');tap('搜索')
     tap('搜索');tap('搜索关键词');adb('shell','input','text','ubuntu');tap('搜索')
     time.sleep(20);capture(prefix,'search')
     adb('shell','input','keyevent','4')
