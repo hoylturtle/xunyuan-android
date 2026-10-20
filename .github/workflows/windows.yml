@@ -24,13 +24,14 @@ jobs:
       - name: Exercise desktop and pagination on Windows
         shell: pwsh
         run: |
-          $process = Start-Process -FilePath desktop/build/release/Xunyuan-Windows-0.1.7.exe -ArgumentList '--smoke-test' -Wait -PassThru
+          $process = Start-Process -FilePath desktop/build/release/Xunyuan-Windows-0.1.8.exe -ArgumentList '--smoke-test' -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw 'Single EXE smoke test failed' }
           if (-not (Test-Path desktop-smoke.png)) { throw 'Desktop screenshot missing' }
           Add-Type -AssemblyName System.Drawing
-          $icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path desktop/build/release/Xunyuan-Windows-0.1.7.exe))
+          $icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path desktop/build/release/Xunyuan-Windows-0.1.8.exe))
           if ($null -eq $icon) { throw 'EXE icon missing' }
           $bitmap = $icon.ToBitmap()
+          if ($bitmap.GetPixel(0,0).A -ne 0) { throw 'Icon corner must be transparent, not white' }
           $green = 0
           for ($x=0; $x -lt $bitmap.Width; $x++) {
             for ($y=0; $y -lt $bitmap.Height; $y++) {
@@ -41,6 +42,9 @@ jobs:
           if ($green -lt 20) { throw 'Expected jade compass EXE icon was not found' }
           $bitmap.Save('exe-icon.png', [System.Drawing.Imaging.ImageFormat]::Png)
           $bitmap.Dispose(); $icon.Dispose()
+          $signature = Get-AuthenticodeSignature desktop/build/release/Xunyuan-Windows-0.1.8.exe
+          @{status=$signature.Status.ToString(); publisher=if ($signature.SignerCertificate) {$signature.SignerCertificate.Subject} else {$null}; note='Unsigned release; SmartScreen reputation warning may still appear.'} | ConvertTo-Json | Set-Content desktop/build/release/signature-status.json
+
 
       - uses: actions/upload-artifact@v4
         with:
@@ -54,10 +58,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view windows-v0.1.7 2>$null
+          gh release view windows-v0.1.8 2>$null
           if ($LASTEXITCODE -ne 0) {
-            gh release create windows-v0.1.7 --target $env:GITHUB_SHA --title '寻源 Windows 0.1.7 · 单文件便携版' --notes-file desktop/README.md --latest=false
+            gh release create windows-v0.1.8 --target $env:GITHUB_SHA --title '寻源 Windows 0.1.8 · 单文件便携版' --notes-file desktop/README.md --latest=false
             if ($LASTEXITCODE -ne 0) { throw 'Release creation failed' }
           }
-          gh release upload windows-v0.1.7 desktop/build/release/Xunyuan-Windows-0.1.7.exe desktop/build/release/SHA256SUMS.txt desktop/build/release/build-report.json desktop-smoke.png exe-icon.png --clobber
+          gh release upload windows-v0.1.8 desktop/build/release/Xunyuan-Windows-0.1.8.exe desktop/build/release/SHA256SUMS.txt desktop/build/release/build-report.json desktop/build/release/signature-status.json desktop-smoke.png exe-icon.png --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed' }
