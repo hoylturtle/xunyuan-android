@@ -1,8 +1,8 @@
 {
-  "versionCode": 7,
-  "versionName": "0.3.3",
-  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.3.3/Xunyuan-0.3.3.apk",
-  "sha256": "ee3b9730899ef3460e4d920d4bbd6f199c7172b1f72702e3b73543815e6dd7aa",
-  "apkSize": 225897,
-  "notes": "修复普通模式漏出成人标题的问题，增强简繁体与变体过滤，同时覆盖搜索结果和旧收藏。"
+  "versionCode": 8,
+  "versionName": "0.4.0",
+  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.4.0/Xunyuan-0.4.0.apk",
+  "sha256": "510915cf13171ba6978a8797a0746f9b1fcfff4b7fad0491d52abb60db8da012",
+  "apkSize": 234089,
+  "notes": "新增电影、电视剧、电子书、软件分类；结果内筛选、排除词及排序；增强收藏搜索、分组备注、批量移除与链接复检。"
 }
