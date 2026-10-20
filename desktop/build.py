@@ -3,7 +3,7 @@
 import argparse,hashlib,os,pathlib,shutil,subprocess,sys,json,zipfile
 root=pathlib.Path(__file__).resolve().parent.parent
 out=root/'desktop/build';classes=out/'classes';app=out/'app'
-VERSION='0.1.8'
+VERSION='0.1.9'
 
 def run(*args):
     subprocess.run([str(x) for x in args],check=True,cwd=root)
@@ -64,9 +64,18 @@ def main():
     print(json.dumps(report),flush=True)
     # Test the actual single EXE, including extraction and its bundled runtime.
     run(target,'--self-test')
+    # Distribute a normal ZIP containing only the portable EXE.
+    archive=installers/('Xunyuan-Windows-'+VERSION+'.zip')
+    with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as bundle:
+        bundle.write(target,arcname=target.name)
+    with zipfile.ZipFile(archive) as bundle:
+        if bundle.namelist()!=[target.name] or bundle.testzip() is not None:
+            raise SystemExit('Portable ZIP verification failed')
+        if hashlib.sha256(bundle.read(target.name)).digest()!=hashlib.sha256(target.read_bytes()).digest():
+            raise SystemExit('Portable ZIP EXE checksum mismatch')
     lines=[]
     for p in sorted(installers.iterdir()):
-        if p.suffix == '.exe':lines.append(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name)
+        if p.suffix in ('.exe','.zip'):lines.append(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name)
     (installers/'SHA256SUMS.txt').write_text('\n'.join(lines)+'\n')
     print('Windows packages:',installers)
 
