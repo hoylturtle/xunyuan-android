@@ -1,8 +1,8 @@
 {
-  "versionCode": 8,
-  "versionName": "0.4.0",
-  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.4.0/Xunyuan-0.4.0.apk",
-  "sha256": "510915cf13171ba6978a8797a0746f9b1fcfff4b7fad0491d52abb60db8da012",
-  "apkSize": 234089,
-  "notes": "新增电影、电视剧、电子书、软件分类；结果内筛选、排除词及排序；增强收藏搜索、分组备注、批量移除与链接复检。"
+  "versionCode": 9,
+  "versionName": "0.5.0",
+  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.5.0/Xunyuan-0.5.0.apk",
+  "sha256": "9dfead0d01ebd978d33da6d9123d04d50555fca535e0f4978cf636bd3a547cf0",
+  "apkSize": 238185,
+  "notes": "更新默认搜索源，新增Bitsearch、爱盼及公共网盘聚合；来源配置每天自动检查，支持手动检查和回退，失败保留本机配置。"
 }
