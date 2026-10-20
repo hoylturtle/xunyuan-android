@@ -1,0 +1,68 @@
+[
+  {
+    "id": "BTMOVI_https",
+    "url": "https://www.btmovi1.cc/so/ubuntu_rel_1.html",
+    "error": "HTTP Error 503: Service Unavailable",
+    "seconds": 0.57
+  },
+  {
+    "id": "ECLSO_https",
+    "url": "https://eclso.fun/soso/ubuntu_rel_1.html",
+    "error": "HTTP Error 503: Service Unavailable",
+    "seconds": 0.55
+  },
+  {
+    "id": "ECLZZ_https",
+    "url": "https://www.eclzz.bar/s/ubuntu_rel_1.html",
+    "error": "HTTP Error 503: Service Unavailable",
+    "seconds": 0.54
+  },
+  {
+    "id": "bitsearch_page2",
+    "url": "https://bitsearch.eu/search?q=ubuntu&page=2",
+    "status": 200,
+    "bytes": 167587,
+    "seconds": 0.78
+  },
+  {
+    "id": "bitsearch_empty",
+    "url": "https://bitsearch.eu/search?q=xunyuan_no_result_7f491c",
+    "status": 200,
+    "bytes": 55466,
+    "seconds": 0.87
+  },
+  {
+    "id": "pansou_spider_retry",
+    "url": "https://so.252035.xyz/api/search?kw=%E8%9C%98%E8%9B%9B%E4%BE%A0&res=merge&src=tg",
+    "error": "HTTP Error 400: Bad Request",
+    "seconds": 2.11
+  },
+  {
+    "id": "pansou_empty_retry",
+    "url": "https://so.252035.xyz/api/search?kw=xunyuan_no_result_7f491c&res=merge&src=tg",
+    "status": 200,
+    "bytes": 49,
+    "seconds": 2.67
+  },
+  {
+    "id": "qkpanso_spider",
+    "url": "https://qkpanso.com/v1/search/disk",
+    "status": 200,
+    "bytes": 93,
+    "seconds": 0.56
+  },
+  {
+    "id": "qkpanso_empty",
+    "url": "https://qkpanso.com/v1/search/disk",
+    "status": 200,
+    "bytes": 12861,
+    "seconds": 3.54
+  },
+  {
+    "id": "qkpanso_page2",
+    "url": "https://qkpanso.com/v1/search/disk",
+    "status": 200,
+    "bytes": 13707,
+    "seconds": 3.44
+  }
+]

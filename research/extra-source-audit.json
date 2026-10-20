@@ -1,0 +1,23 @@
+[
+  {
+    "id": "miaoso",
+    "url": "https://miaosou.fun/api/secendsearch?name=python&pageNo=1",
+    "error": "HTTP Error 403: Forbidden"
+  },
+  {
+    "id": "miaoso_empty",
+    "url": "https://miaosou.fun/api/secendsearch?name=xunyuan_no_result_7f491c&pageNo=1",
+    "error": "HTTP Error 403: Forbidden"
+  },
+  {
+    "id": "aipan",
+    "url": "https://www.aipan.me/api/movies/search?q=%E8%9C%98%E8%9B%9B%E4%BE%A0",
+    "status": 200,
+    "bytes": 3579
+  },
+  {
+    "id": "sousou_api",
+    "url": "https://sousou.pro/api.php?action=search&q=python&page=1&per_size=20&type=quark",
+    "error": "HTTP Error 567: Unknown"
+  }
+]

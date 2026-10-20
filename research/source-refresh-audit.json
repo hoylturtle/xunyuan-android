@@ -1,0 +1,301 @@
+{
+  "checkedAt": "2026-10-20T07:09:15Z",
+  "probes": [
+    {
+      "id": "pansearch",
+      "url": "https://www.pansearch.me/search?keyword=python&offset=0",
+      "status": 200,
+      "bytes": 43766,
+      "finalUrl": "https://www.pansearch.me/search?keyword=python&offset=0",
+      "seconds": 1.28
+    },
+    {
+      "id": "nyaa",
+      "url": "https://nyaa.si/?f=0&c=0_0&q=ubuntu&p=1",
+      "status": 200,
+      "bytes": 16124,
+      "finalUrl": "https://nyaa.si/?f=0&c=0_0&q=ubuntu&p=1",
+      "seconds": 0.81
+    },
+    {
+      "id": "1024BT",
+      "url": "https://fe8a4f95.1024209.xyz/search-ubuntu-0-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.82
+    },
+    {
+      "id": "2048BT",
+      "url": "https://4yqipgtb.2048186.xyz/search-ubuntu-0-1-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.67
+    },
+    {
+      "id": "3MAG",
+      "url": "https://xcili.net/search?q=ubuntu",
+      "status": 200,
+      "bytes": 9002,
+      "finalUrl": "https://xcili.net/search?q=ubuntu",
+      "seconds": 0.44
+    },
+    {
+      "id": "52BT",
+      "url": "https://jta5jho1.529076.xyz/search-ubuntu-0-2-1.html",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.29
+    },
+    {
+      "id": "91BT",
+      "url": "https://w69a2voe.911179.xyz/search-ubuntu-0-3-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.65
+    },
+    {
+      "id": "BAIKE",
+      "url": "https://jgwpt3kq.8881068.xyz/search-ubuntu-0-4-1.html",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.28
+    },
+    {
+      "id": "BTMY",
+      "url": "https://x1kes5no.1230154.xyz/search-ubuntu-1-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.59
+    },
+    {
+      "id": "BTMOVI",
+      "url": "http://www.btmovi1.cc/so/ubuntu_rel_1.html",
+      "status": 200,
+      "bytes": 11434,
+      "finalUrl": "http://www.btmovi1.cc/so/ubuntu_rel_1.html",
+      "seconds": 0.6
+    },
+    {
+      "id": "CIHU",
+      "url": "https://nsrqsei16.sbs/search/ubuntu_ctime_1.html",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.61
+    },
+    {
+      "id": "CILICHI",
+      "url": "https://www.cilichi.shop/cilichi/ubuntu_1_id.html",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.26
+    },
+    {
+      "id": "CILIGEGE",
+      "url": "https://www.ciligege.com/search/ubuntu",
+      "error": "HTTP Error 404: Not Found",
+      "seconds": 0.35
+    },
+    {
+      "id": "CILIGUI",
+      "url": "https://www.ciligui.homes/magnet_search/ubuntu-1-id.html",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.53
+    },
+    {
+      "id": "CILIKAN",
+      "url": "https://www.cilikan.buzz/cilikan/ubuntu",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.65
+    },
+    {
+      "id": "CLB",
+      "url": "https://x1s54cjc.6665087.xyz/search-ubuntu-0-1-1.html",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.25
+    },
+    {
+      "id": "CLD",
+      "url": "https://f1j7ldrf.1122138.xyz/search-ubuntu-0-2-1.html",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.26
+    },
+    {
+      "id": "CLG",
+      "url": "https://3ghj2z89.9900206.xyz/search-ubuntu-0-3-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.91
+    },
+    {
+      "id": "CLGOU",
+      "url": "https://vrnv68kj.6006097.xyz/search-ubuntu-0-4-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.63
+    },
+    {
+      "id": "CLM",
+      "url": "https://dba4ezv8.8800594.xyz/search-ubuntu-1-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.98
+    },
+    {
+      "id": "CLMMBT",
+      "url": "https://bo52g66g.9966109.xyz/search-ubuntu-0-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.84
+    },
+    {
+      "id": "CLS",
+      "url": "https://amk3r0sc.3030117.xyz/search-ubuntu-0-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.79
+    },
+    {
+      "id": "CLTT",
+      "url": "https://o4gybqlc.691105.xyz/search-ubuntu-0-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.63
+    },
+    {
+      "id": "CLTTT",
+      "url": "https://dk0y5zrl.770681.xyz/search-ubuntu-0-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.93
+    },
+    {
+      "id": "CLZZ",
+      "url": "https://b83qkwh4.5201083.xyz/search-ubuntu-0-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.81
+    },
+    {
+      "id": "ECLSO",
+      "url": "http://eclso.fun/soso/ubuntu_rel_1.html",
+      "status": 200,
+      "bytes": 11105,
+      "finalUrl": "http://eclso.fun/soso/ubuntu_rel_1.html",
+      "seconds": 0.53
+    },
+    {
+      "id": "ECLZZ",
+      "url": "http://www.eclzz.bar/s/ubuntu_rel_1.html",
+      "status": 200,
+      "bytes": 11559,
+      "finalUrl": "http://www.eclzz.bar/s/ubuntu_rel_1.html",
+      "seconds": 0.51
+    },
+    {
+      "id": "U9A9",
+      "url": "https://u9a9.site/?type=2&search=ubuntu&p=1",
+      "error": "HTTP Error 503: Service Unavailable",
+      "seconds": 5.76
+    },
+    {
+      "id": "XCCL",
+      "url": "https://www.xccl255.xyz/search/kw-ubuntu-1.html",
+      "error": "HTTP Error 503: Service Unavailable",
+      "seconds": 3.15
+    },
+    {
+      "id": "YHG",
+      "url": "https://www.yuhuage007.xyz/search/ubuntu-1.html",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.27
+    },
+    {
+      "id": "YHG2",
+      "url": "https://zhxg1e5o.1111077.xyz/search-ubuntu-0-0-1.html",
+      "error": "HTTP Error 410: Gone",
+      "seconds": 0.95
+    },
+    {
+      "id": "qupansou",
+      "url": "https://v.funletu.com/search",
+      "error": "HTTP Error 503: Service Unavailable",
+      "seconds": 0.97
+    },
+    {
+      "id": "jikepan",
+      "url": "https://api.jikepan.xyz/search",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "seconds": 0.03
+    },
+    {
+      "id": "hunhepan",
+      "url": "https://hunhepan.com/search?q=python",
+      "status": 200,
+      "bytes": 13217,
+      "finalUrl": "https://hunhepan.com/search?q=python",
+      "seconds": 1.25
+    },
+    {
+      "id": "pansou_readme",
+      "url": "https://raw.githubusercontent.com/fish2018/pansou/main/README.md",
+      "status": 200,
+      "bytes": 25847,
+      "finalUrl": "https://raw.githubusercontent.com/fish2018/pansou/main/README.md",
+      "seconds": 0.37
+    },
+    {
+      "id": "plugins_tree",
+      "url": "https://api.github.com/repos/fish2018/pansou/git/trees/main?recursive=1",
+      "status": 200,
+      "bytes": 113861,
+      "finalUrl": "https://api.github.com/repos/fish2018/pansou/git/trees/main?recursive=1",
+      "seconds": 0.55
+    },
+    {
+      "id": "sousou",
+      "url": "https://so.252035.xyz/search?keyword=python",
+      "status": 200,
+      "bytes": 438,
+      "finalUrl": "https://so.252035.xyz/search?keyword=python",
+      "seconds": 0.78
+    },
+    {
+      "id": "pansou_public",
+      "url": "https://so.252035.xyz/api/search",
+      "status": 200,
+      "bytes": 1225151,
+      "finalUrl": "https://so.252035.xyz/api/search",
+      "seconds": 6.45
+    },
+    {
+      "id": "u3c3",
+      "url": "https://u3c3.com/?search=ubuntu",
+      "status": 200,
+      "bytes": 148791,
+      "finalUrl": "https://u3c3.com/?search=ubuntu",
+      "seconds": 0.47
+    },
+    {
+      "id": "bitsearch",
+      "url": "https://bitsearch.to/search?q=ubuntu",
+      "status": 200,
+      "bytes": 174999,
+      "finalUrl": "https://bitsearch.eu/search?q=ubuntu",
+      "seconds": 1.4
+    },
+    {
+      "id": "solidtorrents",
+      "url": "https://solidtorrents.to/search?q=ubuntu",
+      "status": 200,
+      "bytes": 174999,
+      "finalUrl": "https://bitsearch.eu/search?q=ubuntu",
+      "seconds": 2.06
+    },
+    {
+      "id": "torrentgalaxy",
+      "url": "https://torrentgalaxy.to/torrents.php?search=ubuntu",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "seconds": 0.0
+    },
+    {
+      "id": "lppan",
+      "url": "https://www.lzpan.com/",
+      "status": 200,
+      "bytes": 8150,
+      "finalUrl": "https://www.lzpan.com/",
+      "seconds": 1.93
+    },
+    {
+      "id": "panta",
+      "url": "https://www.pansearch.me/search?keyword=%E8%9C%98%E8%9B%9B%E4%BE%A0&offset=0",
+      "status": 200,
+      "bytes": 38555,
+      "finalUrl": "https://www.pansearch.me/search?keyword=%E8%9C%98%E8%9B%9B%E4%BE%A0&offset=0",
+      "seconds": 1.27
+    }
+  ]
+}

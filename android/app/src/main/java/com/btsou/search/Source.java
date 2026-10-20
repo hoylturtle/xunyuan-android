@@ -15,6 +15,7 @@ public final class Source {
     }
     public String url(String query,int page) throws Exception {
         String encoded=URLEncoder.encode(query,charset).replace("+","%20");
+        if("aipan".equals(parser))return prefix+encoded;
         if ("pansearch".equals(parser)) return prefix+encoded+"&offset="+((page-1)*10);
         return prefix+encoded+(singlePage?"":middle+page+suffix);
     }
@@ -24,10 +25,11 @@ public final class Source {
         for(int i=0;i<a.length();i++) {
             Source s=new Source(a.getJSONObject(i));
             if(!s.id.matches("[a-zA-Z0-9_-]{1,50}")||!ids.add(s.id)) throw new Exception("来源 ID 无效或重复");
-            if(!Arrays.asList("html","nyaa","nuxt","pansearch","qupansou","jikepan").contains(s.parser)) throw new Exception("不支持的解析器："+s.parser);
+            if(!Arrays.asList("html","nyaa","nuxt","pansearch","qupansou","jikepan","pansou","bitsearch","aipan").contains(s.parser)) throw new Exception("不支持的解析器："+s.parser);
             java.net.URI u=new java.net.URI(s.prefix);
             if(!Arrays.asList("https","http").contains(u.getScheme())||u.getHost()==null||u.getUserInfo()!=null) throw new Exception("来源地址无效");
             if(!Arrays.asList("bt","pan").contains(s.kind)) throw new Exception("来源类型无效");
+            if(!java.nio.charset.Charset.isSupported(s.charset))throw new Exception("来源编码无效："+s.charset);
             out.add(s);
         }
         return out;

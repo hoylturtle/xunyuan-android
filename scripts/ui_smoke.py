@@ -66,6 +66,8 @@ def screens(apk,prefix):
             current=next(n.get('text') for n in ET.fromstring(dump()).iter('node') if n.get('text','').startswith('分类：'))
             tap(current);tap(category)
             assert '分类：'+category in dump(),'Category selection must remain visible'
+        tap('来源');assert '官方来源 v2' in dump(),'Source catalog version visible'
+        tap('检查来源更新');time.sleep(4);capture(prefix,'source-updates');tap('搜索')
         tap('筛选与排序')
         tap('结果内包含词，多个词以空格分隔');adb('shell','input','text','Ubuntu')
         tap('应用');tap('筛选与排序');assert 'Ubuntu' in dump(),'Refine fields must survive reopening'

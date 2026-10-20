@@ -19,6 +19,10 @@ public final class MainActivity extends Activity {
     private final int GREEN=Color.rgb(23,105,80),INK=Color.rgb(27,47,37),MUTED=Color.rgb(101,115,106),BG=Color.rgb(246,248,243),LINE=Color.rgb(226,232,222);
     private SharedPreferences prefs;
     private AppUpdates updates;
+    private String bundledCatalogRaw="";
+    private SourceCatalog officialCatalog;
+    private final ExecutorService catalogPool=Executors.newSingleThreadExecutor();
+    private boolean checkingSources=false;
     private List<Source> sources=new ArrayList<>();
     private final SearchEngine engine=new SearchEngine();
     private final ExecutorService detailPool=Executors.newSingleThreadExecutor();
@@ -46,9 +50,9 @@ public final class MainActivity extends Activity {
     @Override public void onCreate(Bundle b){
         super.onCreate(b);prefs=getSharedPreferences("btsou",MODE_PRIVATE);adult=false;prefs.edit().remove("adult").apply();
         try{
-            String bundled=read(getAssets().open("sources.json"),512*1024);String custom=prefs.getString("customSources","");
+            bundledCatalogRaw=read(getAssets().open("sources.json"),512*1024);officialCatalog=SourceCatalog.choose(bundledCatalogRaw,prefs.getString("officialSources",""));String bundled=officialCatalog.raw;String custom=prefs.getString("customSources","");
             try{sources=Source.read(custom.isEmpty()?bundled:custom);}catch(Exception e){sources=Source.read(bundled);toast("自定义来源配置无效，已使用内置来源");}
-            if(!prefs.getBoolean("allSourcesV1",false)){SharedPreferences.Editor defaults=prefs.edit().putBoolean("allSourcesV1",true);for(Source source:sources)if(!source.adult)defaults.putBoolean("source:"+source.id,true);defaults.apply();}
+            if(custom.isEmpty())applySourceDefaults(officialCatalog);
             JSONArray a=new JSONArray(prefs.getString("favorites","[]"));for(int i=0;i<a.length();i++){Result r=Result.from(a.getJSONObject(i));if(Result.safeUrl(r.url))favorites.put(r.key(),r);}
             a=new JSONArray(prefs.getString("history","[]"));for(int i=0;i<a.length();i++)history.add(a.getString(i));
         }catch(Exception e){toast("配置加载失败："+SearchEngine.message(e));}
@@ -56,11 +60,12 @@ public final class MainActivity extends Activity {
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(Color.WHITE);
         render();
         updates=new AppUpdates(this);
+        if(prefs.getBoolean("autoSourceUpdates",true)&&System.currentTimeMillis()-prefs.getLong("lastSourceAttempt",0)>SourceCatalog.INTERVAL)checkSources(false);
         if(prefs.getBoolean("autoUpdates",true)&&System.currentTimeMillis()-prefs.getLong("lastUpdateCheck",0)>86400000L){prefs.edit().putLong("lastUpdateCheck",System.currentTimeMillis()).apply();updates.check(false);}
     }
     @Override protected void onSaveInstanceState(Bundle out){super.onSaveInstanceState(out);out.putString("draft",query==null?draft:query.getText().toString());out.putString("screen",screen);}
     @Override protected void onResume(){super.onResume();if(updates!=null)updates.resumeInstall();}
-    @Override protected void onDestroy(){destroyed=true;uiHandler.removeCallbacksAndMessages(null);generation++;favoriteCheckToken++;if(favoriteCheck!=null)favoriteCheck.cancel(true);engine.close();detailPool.shutdownNow();if(updates!=null)updates.close();super.onDestroy();}
+    @Override protected void onDestroy(){destroyed=true;uiHandler.removeCallbacksAndMessages(null);generation++;favoriteCheckToken++;if(favoriteCheck!=null)favoriteCheck.cancel(true);engine.close();detailPool.shutdownNow();catalogPool.shutdownNow();if(updates!=null)updates.close();super.onDestroy();}
     private int dp(float n){return (int)(getResources().getDisplayMetrics().density*n+0.5f);}
     private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
     private TextView text(String value,int sp,int color,boolean bold){TextView v=new TextView(this);v.setText(value);v.setTextSize(sp);v.setTextColor(color);v.setIncludeFontPadding(false);v.setTypeface(Typeface.create(bold?"sans-serif-medium":"sans-serif",bold?Typeface.BOLD:Typeface.NORMAL));v.setLineSpacing(dp(2),1.06f);return v;}
@@ -181,11 +186,14 @@ public final class MainActivity extends Activity {
     }
     private void renderSources(){
         ScrollView scroll=new ScrollView(this);LinearLayout list=column();padded(list,20);pageTitle(list,"搜索来源","选择你信任的来源，让每一次搜索更合适");LinearLayout stats=row();stats.setPadding(dp(16),dp(15),dp(16),dp(15));stats.setBackground(shape(Color.rgb(232,239,218),16));stats.addView(new UiIcon(this,"sources",GREEN),new LinearLayout.LayoutParams(dp(26),dp(26)));TextView connected=text("已启用 "+activeSources().size()+" 个来源",15,GREEN,true);connected.setPadding(dp(12),0,0,0);stats.addView(connected);list.addView(stats);
+        LinearLayout updatesCard=card();Switch autoSources=new Switch(this);autoSources.setText("自动更新官方来源（每天检查）");autoSources.setChecked(prefs.getBoolean("autoSourceUpdates",true));tintSwitch(autoSources);autoSources.setOnCheckedChangeListener((v,on)->prefs.edit().putBoolean("autoSourceUpdates",on).apply());padded(updatesCard,14);updatesCard.addView(autoSources);
+        String sourceInfo=prefs.getString("customSources","").isEmpty()?"官方来源 v"+officialCatalog.version+" · "+officialCatalog.updated:"自定义来源模式，自动更新暂停";updatesCard.addView(text(sourceInfo+"\n"+prefs.getString("sourceUpdateStatus","内置来源可离线使用"),11,MUTED,false));
+        updatesCard.addView(button(checkingSources?"正在检查来源…":"检查来源更新",false,()->checkSources(true)));updatesCard.addView(button("回退上次来源",false,this::rollbackSources));if(!prefs.getString("customSources","").isEmpty())updatesCard.addView(button("使用官方来源",false,()->{prefs.edit().remove("customSources").apply();sources=new ArrayList<>(officialCatalog.sources);applySourceDefaults(officialCatalog);stop();render();checkSources(true);}));list.addView(updatesCard);
         section(list,"正在使用");List<Source> ordered=new ArrayList<>(sources);ordered.sort(Comparator.comparing(source->!source.adult));boolean has=false;for(Source source:ordered)if((adult||!source.adult)&&prefs.getBoolean("source:"+source.id,source.defaultEnabled)){sourceCard(list,source);has=true;}if(!has)list.addView(text("暂无启用来源，请从备用来源中选择。",12,MUTED,false));
         int backups=0;for(Source source:sources)if((adult||!source.adult)&&!prefs.getBoolean("source:"+source.id,source.defaultEnabled))backups++;
         final int unused=backups;gap(list,12);list.addView(button((showBackupSources?"收起":"查看")+"备用来源（"+unused+"）",false,()->{showBackupSources=!showBackupSources;render();}),new LinearLayout.LayoutParams(-1,dp(46)));
         if(showBackupSources){section(list,"备用来源 · 连接状态可能变化");for(Source source:sources)if((adult||!source.adult)&&!prefs.getBoolean("source:"+source.id,source.defaultEnabled))sourceCard(list,source);}
-        section(list,"管理来源");LinearLayout management=card();settingRow(management,"upload","导入来源配置","从文件添加自己的搜索源",()->chooseFile(42));divider(management);settingRow(management,"history","恢复默认来源","重置来源配置与开关",()->new AlertDialog.Builder(this).setTitle("恢复默认来源？").setMessage("将替换自定义配置并重置来源开关，收藏不受影响。").setPositiveButton("恢复",(d,w)->{stop();SharedPreferences.Editor e=prefs.edit().remove("customSources");for(String key:prefs.getAll().keySet())if(key.startsWith("source:")||key.startsWith("last:"))e.remove(key);e.apply();try{sources=Source.read(read(getAssets().open("sources.json"),512*1024));}catch(Exception ex){toast(SearchEngine.message(ex));}render();}).setNegativeButton("取消",null).show());list.addView(management);gap(list,16);list.addView(text("全部普通来源默认启用；明确失效的网盘链接已隐藏，验证码或超时会标注暂未确认。",11,MUTED,false));scroll.addView(list);body.addView(scroll,new LinearLayout.LayoutParams(-1,-1));
+        section(list,"管理来源");LinearLayout management=card();settingRow(management,"upload","导入来源配置","从文件添加自己的搜索源",()->chooseFile(42));divider(management);settingRow(management,"history","恢复默认来源","重置来源配置与开关",()->new AlertDialog.Builder(this).setTitle("恢复默认来源？").setMessage("将替换自定义配置并重置来源开关，收藏不受影响。").setPositiveButton("恢复",(d,w)->{stop();SharedPreferences.Editor e=prefs.edit().remove("customSources");for(String key:prefs.getAll().keySet())if(key.startsWith("source:")||key.startsWith("last:"))e.remove(key);e.apply();try{sources=new ArrayList<>(officialCatalog.sources);}catch(Exception ex){toast(SearchEngine.message(ex));}render();}).setNegativeButton("取消",null).show());list.addView(management);gap(list,16);list.addView(text("已实测来源默认启用，历史问题来源默认停用；明确失效的网盘链接已隐藏，验证码或超时会标注暂未确认。",11,MUTED,false));scroll.addView(list);body.addView(scroll,new LinearLayout.LayoutParams(-1,-1));
     }
     private void sourceCard(LinearLayout list,Source source){
         LinearLayout card=card();padded(card,15);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-1,-2);cp.bottomMargin=dp(9);list.addView(card,cp);Switch toggle=new Switch(this);toggle.setText(source.name);toggle.setTextColor(INK);toggle.setTextSize(15);toggle.setPadding(0,dp(5),0,dp(5));toggle.setChecked(prefs.getBoolean("source:"+source.id,source.defaultEnabled));tintSwitch(toggle);toggle.setContentDescription(source.name+"搜索源开关");toggle.setOnCheckedChangeListener((b,on)->{prefs.edit().putBoolean("source:"+source.id,on).apply();if(busy)stop();render();});card.addView(toggle);gap(card,7);
@@ -197,6 +205,26 @@ public final class MainActivity extends Activity {
         LinearLayout version=card();padded(version,18);LinearLayout brand=row();FrameLayout brandBox=new FrameLayout(this);brandBox.setBackground(shape(GREEN,14));brandBox.addView(new UiIcon(this,"compass",Color.WHITE),new FrameLayout.LayoutParams(dp(29),dp(29),Gravity.CENTER));brand.addView(brandBox,new LinearLayout.LayoutParams(dp(49),dp(49)));LinearLayout names=column();LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(0,-2,1);np.leftMargin=dp(13);brand.addView(names,np);names.addView(brandTitle(20));gap(names,5);names.addView(text("版本 "+appVersion()+" · 轻松找到好资源",11,MUTED,false));version.addView(brand);gap(version,16);version.addView(button("检查应用更新",true,()->updates.check(true)),new LinearLayout.LayoutParams(-1,dp(46)));list.addView(version);
         section(list,"数据与备份");LinearLayout data=card();settingRow(data,"history","清除搜索历史","清理最近搜索的关键词",()->{history.clear();prefs.edit().remove("history").apply();toast("历史已清除");});divider(data);settingRow(data,"upload","导出收藏备份","保存一份本地收藏文件",()->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.setType("application/json");i.addCategory(Intent.CATEGORY_OPENABLE);i.putExtra(Intent.EXTRA_TITLE,"寻源-收藏.json");startActivityForResult(i,43);});divider(data);settingRow(data,"download","导入收藏备份","恢复已保存的收藏",()->chooseFile(44));list.addView(data);
         section(list,"应用与更新");LinearLayout app=card();LinearLayout autoBox=column();padded(autoBox,16);Switch auto=new Switch(this);auto.setText("自动检查更新");auto.setTextSize(15);auto.setTextColor(INK);auto.setPadding(0,dp(5),0,dp(5));tintSwitch(auto);auto.setChecked(prefs.getBoolean("autoUpdates",true));auto.setOnCheckedChangeListener((b,on)->prefs.edit().putBoolean("autoUpdates",on).apply());autoBox.addView(auto);gap(autoBox,5);autoBox.addView(text("启动时每天检查一次，安装前会请你确认。",11,MUTED,false));app.addView(autoBox);divider(app);settingRow(app,"link","GitHub 项目","查看源码、说明与发布版本",()->open(AppUpdates.REPO_URL));divider(app);settingRow(app,"sources","开源参考与许可","依赖和搜索来源说明",()->new AlertDialog.Builder(this).setTitle("开源参考与许可").setMessage("寻源为独立 Java 实现。\n\nHTML 解析：jsoup 1.18.3（MIT）。\n技术调研：TorrentSearch、PanSou、qBittorrent 搜索插件。\n\n完整依赖许可与来源说明见 GitHub 仓库。").setPositiveButton("关闭",null).show());list.addView(app);gap(list,20);TextView privacy=text("搜索直连第三方来源，数据与收藏仅保存在本机。\n没有账号、广告 SDK 或统计 SDK。",11,MUTED,false);privacy.setGravity(Gravity.CENTER);list.addView(privacy);gap(list,8);scroll.addView(list);body.addView(scroll,new LinearLayout.LayoutParams(-1,-1));
+    }
+
+    private void applySourceDefaults(SourceCatalog catalog){
+        if(prefs.getLong("sourceDefaultsVersion",0)>=catalog.version)return;
+        SharedPreferences.Editor edit=prefs.edit().putLong("sourceDefaultsVersion",catalog.version);
+        for(Source source:catalog.sources)if(!source.defaultEnabled&&!source.adult)edit.putBoolean("source:"+source.id,false);edit.apply();
+    }
+    private void checkSources(boolean manual){
+        if(checkingSources){if(manual)toast("正在检查来源更新");return;}if(!prefs.getString("customSources","").isEmpty()){if(manual)toast("自定义来源不会被覆盖；请先切换到官方来源");return;}
+        if(officialCatalog==null)return;checkingSources=true;prefs.edit().putLong("lastSourceAttempt",System.currentTimeMillis()).apply();final SourceCatalog current=officialCatalog;
+        if(manual)toast("正在检查官方来源…");catalogPool.submit(()->{try{SourceCatalog.Update update=SourceCatalog.download(current);runOnUiThread(()->{if(destroyed)return;checkingSources=false;
+            if(!prefs.getString("customSources","").isEmpty())return;
+            SharedPreferences.Editor edit=prefs.edit();String stamp=new java.text.SimpleDateFormat("MM-dd HH:mm",Locale.CHINA).format(new java.util.Date());String message="已检查 "+stamp+" · 来源 v"+update.catalog.version;
+            if(update.changed){edit.putString("previousOfficialSources",current.raw).putString("officialSources",update.catalog.raw);if(busy&&!manual)message+=" 已下载，下次启动生效";else{stop();officialCatalog=update.catalog;sources=new ArrayList<>(officialCatalog.sources);applySourceDefaults(officialCatalog);results.clear();statuses.clear();message+=" 已更新";}}else edit.putString("officialSources",update.catalog.raw);
+            edit.putString("sourceUpdateStatus",message).apply();if(manual)toast(message);if("来源".equals(screen))render();
+        });}catch(Exception e){runOnUiThread(()->{if(destroyed)return;checkingSources=false;String message=SearchEngine.message(e);prefs.edit().putString("sourceUpdateStatus",message).apply();if(manual)toast(message);if("来源".equals(screen))render();});}});
+    }
+    private void rollbackSources(){
+        if(checkingSources){toast("请等来源检查结束");return;}String old=prefs.getString("previousOfficialSources","");if(old.isEmpty()){toast("暂无上一个在线来源版本");return;}
+        try{SourceCatalog previous=new SourceCatalog(old);if(previous.version<new SourceCatalog(bundledCatalogRaw).version){toast("不能回退到当前应用内置来源之前");return;}new AlertDialog.Builder(this).setTitle("回退到来源 v"+previous.version+"？").setMessage("会暂停自动来源更新，收藏不受影响。").setPositiveButton("回退",(d,w)->{stop();prefs.edit().putString("officialSources",previous.raw).remove("customSources").putBoolean("autoSourceUpdates",false).putLong("sourceDefaultsVersion",0).putString("sourceUpdateStatus","已回退，自动更新已暂停").apply();officialCatalog=previous;sources=new ArrayList<>(previous.sources);applySourceDefaults(previous);results.clear();render();}).setNegativeButton("取消",null).show();}catch(Exception e){toast("上次配置不可用，当前配置已保留");}
     }
 
     private String appVersion(){try{return getPackageManager().getPackageInfo(getPackageName(),0).versionName;}catch(Exception e){return "";}}

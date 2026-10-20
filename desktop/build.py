@@ -3,7 +3,7 @@
 import argparse,hashlib,os,pathlib,shutil,subprocess,sys,json,zipfile
 root=pathlib.Path(__file__).resolve().parent.parent
 out=root/'desktop/build';classes=out/'classes';app=out/'app'
-VERSION='0.2.0'
+VERSION='0.3.0'
 
 def run(*args):
     subprocess.run([str(x) for x in args],check=True,cwd=root)
@@ -21,13 +21,14 @@ def main():
         if p.exists():shutil.rmtree(p)
         p.mkdir(parents=True)
     shared=root/'android/app/src/main/java/com/btsou/search'
-    sources=[shared/(n+'.java') for n in ['Source','Result','SearchEngine','TapSequence','LinkHealth','ResultTools']]+list((root/'desktop/src').rglob('*.java'))+[root/'android/tests/LinkHealthTests.java',root/'android/tests/ResultToolsTests.java']
+    sources=[shared/(n+'.java') for n in ['Source','Result','SearchEngine','TapSequence','LinkHealth','ResultTools','SourceCatalog']]+list((root/'desktop/src').rglob('*.java'))+[root/'android/tests/LinkHealthTests.java',root/'android/tests/ResultToolsTests.java',root/'android/tests/SourceCatalogTests.java']
     run(tool('javac'),'-encoding','UTF-8','--release','17','-cp',os.pathsep.join(map(str,deps)),'-d',classes,*sources)
     shutil.copy2(root/'android/app/src/main/assets/sources.json',classes/'sources.json')
     (classes/'icons').mkdir()
     for icon in (root/'desktop/assets').glob('icon-*.png'):shutil.copy2(icon,classes/'icons'/icon.name)
     (classes/'fixtures').mkdir()
-    for n in ['pansearch','nyaa','3MAG','BTMOVI','ECLSO','ECLZZ']:shutil.copy2(root/('research/probes/'+n+'.txt'),classes/'fixtures'/(n+'.txt'))
+    for n in ['pansearch','nyaa','3MAG','BTMOVI','ECLSO','ECLZZ','bitsearch','bitsearch_page2','bitsearch_empty','pansou_python','pansou_empty_retry','aipan','aipan_empty']:shutil.copy2(root/('research/probes/'+n+'.txt'),classes/'fixtures'/(n+'.txt'))
+    shutil.copy2(root/'research/probes/aipan_details.json',classes/'fixtures/aipan_details.json')
     manifest=out/'MANIFEST.MF';manifest.write_text('Manifest-Version: 1.0\nMain-Class: com.btsou.search.DesktopApp\nClass-Path: jsoup-1.18.3.jar json-20240303.jar\n\n')
     run(tool('jar'),'--create','--file',app/'Xunyuan.jar','--manifest',manifest,'-C',classes,'.')
     for p in deps:shutil.copy2(p,app/p.name)

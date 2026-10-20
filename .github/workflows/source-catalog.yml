@@ -1,0 +1,45 @@
+name: Source catalog and daily health audit
+on:
+  push:
+    branches: [main]
+    paths: ['sources/catalog.json', 'android/app/src/main/assets/sources.json', '.github/workflows/source-catalog.yml']
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate catalog, parser fixtures, fallback and version rules
+        run: |
+          cmp sources/catalog.json android/app/src/main/assets/sources.json
+          python3 android/test.py
+      - name: Audit currently enabled sources without changing defaults
+        if: github.event_name != 'push'
+        run: java -cp android/tests/classes:android/app/libs/jsoup-1.18.3.jar:android/tests/json-20240303.jar SourceAudit .
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'push' && always()
+        with:
+          name: source-health-report
+          path: research/live-source-refresh.json
+      - name: Publish declarative source catalog
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p source-release
+          cp sources/catalog.json source-release/sources.json
+          sha256sum source-release/sources.json > source-release/SHA256SUMS.txt
+          gh release view source-catalog >/dev/null 2>&1 || gh release create source-catalog --title '寻源在线来源配置' --notes '安卓和 Windows 每天检查的官方声明式来源配置。失败保留本机配置；不包含可执行代码。' --latest=false
+          gh release upload source-catalog source-release/sources.json source-release/SHA256SUMS.txt --clobber

@@ -27,7 +27,7 @@ public final class SearchEngine {
     public synchronized void search(List<Source> sources,String query,int page,boolean allowAdult,Listener listener){
         cancel();final int ticket=generation.get();
         List<Source> ordered=new ArrayList<>(sources);
-        Set<String> priority=new HashSet<>(Arrays.asList("pansearch","nyaa","3MAG","BTMOVI","ECLSO","ECLZZ"));
+        Set<String> priority=new HashSet<>(Arrays.asList("pansearch","pansou_public","bitsearch","nyaa","3MAG","BTMOVI","ECLSO","ECLZZ"));
         ordered.sort(Comparator.comparing(s->!priority.contains(s.id)));
         for(Source s:ordered)if(allowAdult||!s.adult)jobs.add(pool.submit(()->{
             try{
@@ -58,7 +58,8 @@ public final class SearchEngine {
         if(e instanceof javax.net.ssl.SSLException)return "TLS 连接失败";
         String m=e.getMessage();return m==null?e.getClass().getSimpleName():m.substring(0,Math.min(120,m.length()));
     }
-    public static String request(String address,String body,String referer,String charset) throws Exception {
+    public static String request(String address,String body,String referer,String charset) throws Exception {return request(address,body,referer,charset,4*1024*1024);}
+    public static String request(String address,String body,String referer,String charset,int maxBytes) throws Exception {
         for(int redirect=0;redirect<5;redirect++){
             if(Thread.currentThread().isInterrupted())throw new InterruptedException();
             if(!Result.safeUrl(address)||address.startsWith("magnet:"))throw new IOException("地址无效");
@@ -76,7 +77,7 @@ public final class SearchEngine {
                 InputStream raw=c.getInputStream();
                 try(InputStream in="gzip".equalsIgnoreCase(c.getContentEncoding())?new GZIPInputStream(raw):raw;ByteArrayOutputStream out=new ByteArrayOutputStream()){
                     byte[] b=new byte[8192];int n;long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(18);
-                    while((n=in.read(b))!=-1){if(Thread.currentThread().isInterrupted())throw new InterruptedException();if(System.nanoTime()>deadline)throw new SocketTimeoutException();if(out.size()+n>4*1024*1024)throw new IOException("来源响应超过 4 MB");out.write(b,0,n);}
+                    while((n=in.read(b))!=-1){if(Thread.currentThread().isInterrupted())throw new InterruptedException();if(System.nanoTime()>deadline)throw new SocketTimeoutException();if(out.size()+n>maxBytes)throw new IOException("响应大小超过限制");out.write(b,0,n);}
                     return new String(out.toByteArray(),Charset.forName(charset));
                 }
             }finally{c.disconnect();}
@@ -92,13 +93,29 @@ public final class SearchEngine {
         }else if("jikepan".equals(s.parser)){
             if(page>1)return Collections.emptyList();url=s.prefix;referer="https://jikepan.xyz/";body=new JSONObject().put("name",query).put("is_all",false).toString();
         }
+        if("aipan".equals(s.parser)){
+            URI endpoint=new URI(s.prefix);String origin=endpoint.getScheme()+"://"+endpoint.getRawAuthority();JSONObject search=new JSONObject(request(url,null,s.prefix,s.charset));JSONArray movies=search.optJSONArray("movies");if(movies==null)throw new IOException("爱盼搜索结构已改变");
+            JSONArray details=new JSONArray();int start=(page-1)*5;Exception failure=null;
+            for(int i=start;i<Math.min(start+5,movies.length());i++){if(Thread.currentThread().isInterrupted())throw new InterruptedException();String id=movies.getJSONObject(i).optString("id");if(!id.matches("[0-9]{1,12}"))continue;try{details.put(new JSONObject(request(origin+"/api/movies/detail/"+id,null,origin+"/movie/"+id,s.charset)));}catch(Exception e){failure=e;}}
+            if(details.length()==0&&failure!=null)throw failure;
+            return parse(s,new JSONObject().put("details",details).toString(),url);
+        }
         String data=request(url,body,referer,s.charset);
         return parse(s,data,url);
     }
     private static Result base(Source s){Result r=new Result();r.source=s.name;r.adult=s.adult;r.kind=s.kind;return r;}
     public static List<Result> parse(Source s,String data,String url)throws Exception{
         List<Result> out=new ArrayList<>();
-        if("qupansou".equals(s.parser)){
+        if("aipan".equals(s.parser)){
+            JSONArray details=new JSONObject(data).getJSONArray("details");for(int i=0;i<details.length();i++){JSONObject detail=details.getJSONObject(i);int added=0;for(String field:new String[]{"panLinks","resources"}){JSONArray links=detail.optJSONArray(field);if(links==null)continue;for(int k=0;k<links.length()&&added<24;k++){JSONObject link=links.getJSONObject(k);String target=link.optString("url"),kind=Result.cloudType(target);if(kind.isEmpty()&&!target.startsWith("magnet:"))continue;Result r=base(s);r.title=clean(detail.optString("title")+" "+link.optString("name",link.optString("title")));r.url=target;r.kind=kind.isEmpty()?"bt":kind;URI endpoint=new URI(url);r.pageUrl=endpoint.getScheme()+"://"+endpoint.getRawAuthority()+"/movie/"+detail.optString("aipanId");r.size=link.optString("sizeLabel");Matcher pwd=Pattern.compile("(?:[?&](?:pwd|password)=|提取码[：:\\s]*)([a-zA-Z0-9]{4,8})").matcher(target+" "+r.title);if(pwd.find())r.password=pwd.group(1);r.adult|=Result.adultText(detail.optString("synopsis"));out.add(r);added++;}}}
+        }else if("pansou".equals(s.parser)){
+            JSONObject j=new JSONObject(data);if(j.optInt("code",-1)!=0)throw new IOException("聚合来源拒绝请求："+j.optString("message"));
+            JSONObject payload=j.optJSONObject("data");if(payload==null)throw new IOException("聚合来源数据格式已改变");JSONObject groups=payload.optJSONObject("merged_by_type");
+            if(groups==null&&payload.optInt("total",-1)!=0)throw new IOException("聚合来源结果结构已改变");
+            if(groups!=null){List<String> keys=new ArrayList<>();java.util.Iterator<String> it=groups.keys();while(it.hasNext())keys.add(it.next());Collections.sort(keys);
+                for(String key:keys){JSONArray rows=groups.optJSONArray(key);if(rows==null)continue;for(int i=0;i<rows.length();i++){JSONObject x=rows.optJSONObject(i);if(x==null)continue;String link=x.optString("url"),kind=Result.cloudType(link);if(kind.isEmpty()&&!link.startsWith("magnet:"))continue;Result r=base(s);r.title=clean(x.optString("note"));r.url=link;r.kind=kind.isEmpty()?"bt":kind;r.password=x.optString("password");r.date=x.optString("datetime");r.pageUrl=url;r.adult|=Result.adultText(x.optString("note"));out.add(r);}}
+            }
+        }else if("qupansou".equals(s.parser)){
             JSONObject j=new JSONObject(data);if(j.optInt("status")!=200)throw new IOException("来源拒绝请求："+j.optString("message"));JSONArray a=j.optJSONArray("data");
             if(a!=null)for(int i=0;i<a.length();i++){JSONObject x=a.getJSONObject(i);Result r=base(s);r.title=clean(x.optString("title",x.optString("filename")));r.url=x.optString("url");if(r.url.isEmpty())r.url=x.optString("link");r.password=x.optString("extcode");r.size=x.optString("size");r.date=x.optString("updatetime");r.kind=Result.cloudType(r.url);if(!r.kind.isEmpty())out.add(r);}
         }else if("jikepan".equals(s.parser)){
@@ -135,6 +152,7 @@ public final class SearchEngine {
             }else{
                 Elements blocks;
                 if("nyaa".equals(s.parser))blocks=doc.select("table.torrent-list tbody tr");
+                else if("bitsearch".equals(s.parser))blocks=doc.select(".torrent-result-card");
                 else {blocks=doc.select(".search-item, .file-list tbody tr");if(blocks.isEmpty())blocks=doc.select("h2, h3");}
                 for(Element b:blocks){
                     Element title="nyaa".equals(s.parser)?b.selectFirst("td[colspan] a[href^=/view/]:not(.comments)"):b.selectFirst("h2 a, h3 a, .result-title a");

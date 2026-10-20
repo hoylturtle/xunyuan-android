@@ -15,7 +15,7 @@ import org.json.*;
 
 /** Desktop shell; Source, Result and SearchEngine are shared with Android. */
 public final class DesktopApp {
-    public static final String VERSION="0.2.0";
+    public static final String VERSION="0.3.0";
     private static final Color BG=new Color(246,248,245),GREEN=new Color(35,105,80),INK=new Color(30,47,39),MUTED=new Color(103,119,109);
     private final JTabbedPane tabs=new JTabbedPane();
     private final JFrame frame=new JFrame("寻源 · Windows "+VERSION);
@@ -46,18 +46,24 @@ public final class DesktopApp {
     private int sourcePage=1,displayPage=0,pending=0; private String activeQuery="",activeFilter="全部资源"; private boolean activeAdult=false,loading=false,browsing=false;
     private final List<Result> visible=new ArrayList<>();
     private final Path dataPath;
+    private final String bundledCatalog;
+    private SourceCatalog officialCatalog;
+    private JScrollPane sourcePane;
+    private SwingWorker<SourceCatalog.Update,Void> sourceUpdate;
 
     private DesktopApp() throws Exception {
         String appData=System.getenv("LOCALAPPDATA");
         dataPath=Paths.get(appData==null?System.getProperty("user.home"):appData,"Xunyuan","favorites.json");
         String json=new String(Objects.requireNonNull(getClass().getResourceAsStream("/sources.json")).readAllBytes(),StandardCharsets.UTF_8);
-        sources=new ArrayList<>(Source.read(json));
+        sources=new ArrayList<>();bundledCatalog=json;
         try{Path settingsPath=dataPath.resolveSibling("settings.json");if(Files.exists(settingsPath))settings=new JSONObject(Files.readString(settingsPath));JSONArray saved=settings.optJSONArray("history");if(saved!=null)for(int i=0;i<saved.length();i++)history.add(saved.getString(i));}catch(Exception e){status.setText("设置读取失败，使用默认值");}
-        if(sources.stream().noneMatch(s->s.id.equals("sukebei")))sources.add(new Source(new JSONObject().put("id","sukebei").put("name","Sukebei").put("kind","bt").put("parser","nyaa").put("prefix","https://sukebei.nyaa.si/?f=0&c=0_0&q=").put("middle","&p=").put("adult",true).put("enabled",false).put("note","需开启扩展搜索并勾选此来源；可用性取决于网络")));
+        String cached="";try{Path cache=dataPath.resolveSibling("catalog.json");if(Files.exists(cache)&&Files.size(cache)<=SourceCatalog.MAX_BYTES)cached=Files.readString(cache);}catch(Exception ignored){}
+        officialCatalog=SourceCatalog.choose(bundledCatalog,cached);sources.addAll(officialCatalog.sources);applySourceDefaults();
+
         java.util.List<Image> icons=new ArrayList<>();for(int size:new int[]{16,32,48,128,256}){java.net.URL icon=getClass().getResource("/icons/icon-"+size+".png");if(icon!=null)icons.add(javax.imageio.ImageIO.read(icon));}frame.setIconImages(icons);
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         frame.setMinimumSize(new Dimension(1000,640));frame.setSize(1080,780);frame.setLocationRelativeTo(null);
-        frame.addWindowListener(new WindowAdapter(){public void windowClosed(WindowEvent e){generation.incrementAndGet();if(favoriteCheck!=null)favoriteCheck.cancel(true);engine.close();}});
+        frame.addWindowListener(new WindowAdapter(){public void windowClosed(WindowEvent e){generation.incrementAndGet();if(favoriteCheck!=null)favoriteCheck.cancel(true);if(sourceUpdate!=null)sourceUpdate.cancel(true);engine.close();}});
         JPanel root=new JPanel(new BorderLayout(0,16));root.setBackground(BG);root.setBorder(new EmptyBorder(24,28,20,28));frame.setContentPane(root);
         JPanel header=new JPanel(new BorderLayout());header.setOpaque(false);
         title.setFont(title.getFont().deriveFont(Font.BOLD,30f));title.setForeground(GREEN);
@@ -79,6 +85,7 @@ public final class DesktopApp {
         watch(within,this::refilter);watch(exclude,this::refilter);watch(favoriteQuery,this::paintFavorites);
         recent.setPreferredSize(new Dimension(165,28));recent.addActionListener(e->{if(recent.getSelectedIndex()>0)query.setText(Objects.toString(recent.getSelectedItem()));});
         refreshHistory();paintResults();
+        if(!Boolean.getBoolean("xunyuan.smoke")&&settings.optBoolean("autoSources",true)&&System.currentTimeMillis()-settings.optLong("lastSourceAttempt",0)>SourceCatalog.INTERVAL)SwingUtilities.invokeLater(()->checkSourceUpdates(false));
     }
     private void onTitleTap(){
         if(!titleTaps.tap(System.nanoTime()))return;
@@ -112,10 +119,13 @@ public final class DesktopApp {
     }
     private JScrollPane sourcesPanel(){
         JPanel p=new JPanel();p.setLayout(new BoxLayout(p,BoxLayout.Y_AXIS));p.setBackground(Color.WHITE);p.setBorder(new EmptyBorder(16,16,16,16));
-        JLabel info=new JLabel("勾选参与搜索的来源。备用来源可能失效，可按需选择。");p.add(info);p.add(Box.createVerticalStrut(12));
+        sourceChecks.clear();sourceRows.clear();
+        JPanel manage=new JPanel(new FlowLayout(FlowLayout.LEFT));manage.setOpaque(false);JButton update=new JButton(sourceUpdate==null?"检查来源更新":"正在检查来源…"),rollback=new JButton("回退上次来源");JCheckBox auto=new JCheckBox("每天自动更新来源",settings.optBoolean("autoSources",true));auto.setOpaque(false);auto.addActionListener(e->{try{settings.put("autoSources",auto.isSelected());saveSettings();}catch(Exception ignored){}});update.addActionListener(e->checkSourceUpdates(true));rollback.addActionListener(e->rollbackSources());manage.add(update);manage.add(rollback);manage.add(auto);p.add(manage);
+        JLabel version=new JLabel("官方来源 v"+officialCatalog.version+" · "+officialCatalog.updated+" · 默认启用 "+officialCatalog.ordinaryEnabled()+" 个普通来源");p.add(version);JLabel last=new JLabel(settings.optString("sourceStatus","在线检查失败时继续使用本机配置"));last.setToolTipText(last.getText());p.add(last);
+        JLabel info=new JLabel("已验证来源默认启用，历史问题来源默认停用，可按需手动试用。");p.add(info);p.add(Box.createVerticalStrut(12));
         List<Source> ordered=new ArrayList<>(sources);ordered.sort(Comparator.comparing((Source s)->!s.defaultEnabled));
         for(Source s:ordered){JPanel row=new JPanel();row.setLayout(new BoxLayout(row,BoxLayout.Y_AXIS));row.setBackground(Color.WHITE);JCheckBox c=new JCheckBox(s.name+"  ·  "+(s.adult?"扩展来源":s.kind.equals("pan")?"网盘":"磁力"),settings.optBoolean("source:"+s.id,s.defaultEnabled)&&!s.adult);c.addActionListener(e->{if(!s.adult){try{settings.put("source:"+s.id,c.isSelected());saveSettings();}catch(Exception ex){status.setText("来源设置保存失败");}}});c.setBackground(Color.WHITE);c.setToolTipText(s.note+"  "+s.prefix);sourceChecks.put(s.id,c);sourceRows.put(s.id,row);row.add(c);JLabel note=new JLabel("      "+s.note);note.setForeground(MUTED);row.add(note);row.add(Box.createVerticalStrut(8));row.setVisible(!s.adult||adultEnabled);p.add(row);}
-        return new JScrollPane(p);
+        if(sourcePane==null)sourcePane=new JScrollPane(p);else sourcePane.setViewportView(p);return sourcePane;
     }
     private JPanel aboutPanel(){
         JPanel p=new JPanel(new BorderLayout(0,12));p.setBorder(new EmptyBorder(18,16,16,16));p.setOpaque(false);
@@ -158,6 +168,17 @@ public final class DesktopApp {
     private void copy(String value){Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(value),null);}
     private void openSelected(JList<Result> list){Result r=list.getSelectedValue();if(r!=null){if(!r.password.isEmpty())copy(r.password);openAddress(r.url);}}
     private void openAddress(String address){try{if(!Result.safeUrl(address))throw new Exception("地址无效");Desktop.getDesktop().browse(new URI(address));}catch(Exception e){copy(address);JOptionPane.showMessageDialog(frame,"没有可用的关联应用或打开失败。地址已复制，可粘贴到浏览器或下载工具。\n"+e.getMessage());}}
+    private void applySourceDefaults(){if(settings.optLong("sourceDefaultsVersion",0)>=officialCatalog.version)return;try{for(Source s:officialCatalog.sources)if(!s.defaultEnabled&&!s.adult)settings.put("source:"+s.id,false);settings.put("sourceDefaultsVersion",officialCatalog.version);saveSettings();}catch(Exception e){status.setText("来源默认开关保存失败");}}
+    private void saveCatalogFile(String name,String raw)throws Exception{Files.createDirectories(dataPath.getParent());Path target=dataPath.resolveSibling(name),tmp=dataPath.resolveSibling(name+".tmp");Files.writeString(tmp,raw,StandardCharsets.UTF_8);Files.move(tmp,target,StandardCopyOption.REPLACE_EXISTING);}
+    private void activateCatalog(SourceCatalog catalog){generation.incrementAndGet();engine.cancel();loading=false;pending=0;browsing=false;collected.clear();visible.clear();displayPage=0;officialCatalog=catalog;sources.clear();sources.addAll(catalog.sources);applySourceDefaults();sourcesPanel();paintResults();}
+    private void checkSourceUpdates(boolean manual){
+        if(sourceUpdate!=null){if(manual)status.setText("正在检查来源更新");return;}final SourceCatalog current=officialCatalog;try{settings.put("lastSourceAttempt",System.currentTimeMillis());saveSettings();}catch(Exception ignored){}
+        sourceUpdate=new SwingWorker<SourceCatalog.Update,Void>(){protected SourceCatalog.Update doInBackground()throws Exception{return SourceCatalog.download(current);}protected void done(){if(isCancelled())return;sourceUpdate=null;try{SourceCatalog.Update update=get();String message="已检查 "+new java.text.SimpleDateFormat("MM-dd HH:mm").format(new java.util.Date())+" · 来源 v"+update.catalog.version;
+                if(update.changed){saveCatalogFile("catalog.previous.json",current.raw);saveCatalogFile("catalog.json",update.catalog.raw);if(loading&&!manual)message+=" 已下载，下次启动生效";else{activateCatalog(update.catalog);message+=" 已更新";}}else saveCatalogFile("catalog.json",update.catalog.raw);
+                settings.put("sourceStatus",message);if(manual)status.setText(message);
+            }catch(Exception e){try{settings.put("sourceStatus","更新失败，保留本机配置："+SearchEngine.message(e));}catch(Exception ignored){}if(manual)status.setText(settings.optString("sourceStatus"));}saveSettings();sourcesPanel();}};sourceUpdate.execute();if(manual)status.setText("正在检查官方来源更新…");sourcesPanel();
+    }
+    private void rollbackSources(){if(sourceUpdate!=null){status.setText("请等来源检查结束");return;}try{Path previous=dataPath.resolveSibling("catalog.previous.json");if(!Files.exists(previous))throw new Exception("暂无上一个在线来源版本");if(Files.size(previous)>SourceCatalog.MAX_BYTES)throw new Exception("上次配置过大");SourceCatalog old=new SourceCatalog(Files.readString(previous));if(old.version<new SourceCatalog(bundledCatalog).version)throw new Exception("不能回退到当前应用内置来源之前");if(JOptionPane.showConfirmDialog(frame,"回退到来源 v"+old.version+" 并暂停自动来源更新？收藏不受影响。","回退来源",JOptionPane.OK_CANCEL_OPTION)!=JOptionPane.OK_OPTION)return;saveCatalogFile("catalog.json",old.raw);settings.put("autoSources",false);settings.put("sourceDefaultsVersion",0);settings.put("sourceStatus","已回退，自动更新已暂停");activateCatalog(old);saveSettings();status.setText("来源已回退");}catch(Exception e){JOptionPane.showMessageDialog(frame,e.getMessage());}}
     private void watch(JTextField field,Runnable action){field.getDocument().addDocumentListener(new javax.swing.event.DocumentListener(){public void insertUpdate(javax.swing.event.DocumentEvent e){action.run();}public void removeUpdate(javax.swing.event.DocumentEvent e){action.run();}public void changedUpdate(javax.swing.event.DocumentEvent e){action.run();}});}
     private void saveSettings(){try{settings.put("history",new JSONArray(history));Files.createDirectories(dataPath.getParent());Path target=dataPath.resolveSibling("settings.json"),tmp=dataPath.resolveSibling("settings.json.tmp");Files.writeString(tmp,settings.toString(2),StandardCharsets.UTF_8);Files.move(tmp,target,StandardCopyOption.REPLACE_EXISTING);}catch(Exception e){status.setText("设置保存失败："+e.getMessage());}}
     private void refreshHistory(){recent.removeAllItems();recent.addItem("选择历史关键词");for(String q:history)if(adultEnabled||!Result.adultText(q))recent.addItem(q);}
@@ -171,6 +192,8 @@ public final class DesktopApp {
     }
     private void testTitleClick(){title.dispatchEvent(new MouseEvent(title,MouseEvent.MOUSE_CLICKED,System.currentTimeMillis(),0,4,4,1,false,MouseEvent.BUTTON1));}
     private void smokeTest(){
+        SourceCatalog originalCatalog=officialCatalog;
+        try{SourceCatalog newer=new SourceCatalog(new JSONObject(originalCatalog.raw).put("version",originalCatalog.version+1).toString());activateCatalog(newer);if(officialCatalog.version!=newer.version||sourceChecks.size()!=newer.sources.size()||sourceChecks.get("1024BT").isSelected())throw new AssertionError("Catalog activation and retired defaults");activateCatalog(originalCatalog);}catch(Exception e){throw new RuntimeException(e);}
         java.util.function.BooleanSupplier originalConfirm=confirmAdult;
         confirmAdult=()->false;
         for(int i=0;i<6;i++)testTitleClick();if(adultEnabled)throw new AssertionError("Cancelled unlock changed mode");
@@ -204,6 +227,7 @@ public final class DesktopApp {
     }
     public static void main(String[] args){
         if(Arrays.asList(args).contains("--self-test")){try{DesktopTests.run();}catch(Exception e){e.printStackTrace();System.exit(1);}return;}
+        if(Arrays.asList(args).contains("--smoke-test"))System.setProperty("xunyuan.smoke","true");
         System.setProperty("sun.java2d.uiScale.enabled","true");System.setProperty("java.net.useSystemProxies","true");
         SwingUtilities.invokeLater(()->{try{UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());Font font=new Font("Microsoft YaHei UI",Font.PLAIN,14);for(Object key:Collections.list(UIManager.getDefaults().keys()))if(UIManager.get(key) instanceof javax.swing.plaf.FontUIResource)UIManager.put(key,new javax.swing.plaf.FontUIResource(font));DesktopApp app=new DesktopApp();app.frame.setVisible(true);if(Arrays.asList(args).contains("--smoke-test"))app.smokeTest();}catch(Throwable e){e.printStackTrace();if(!Arrays.asList(args).contains("--smoke-test"))JOptionPane.showMessageDialog(null,"寻源启动失败："+e.getMessage());System.exit(1);}});
     }

@@ -1,0 +1,70 @@
+{
+  "catalogVersion": 2,
+  "note": "Cloud probe only; no account login, share download or automatic retirement",
+  "checkedAt": "2026-10-20T07:21:41.564724856Z",
+  "sources": [
+    {
+      "ms": 1596,
+      "query": "python",
+      "id": "pansearch",
+      "state": "parsed",
+      "results": 75
+    },
+    {
+      "ms": 1101,
+      "query": "ubuntu",
+      "id": "nyaa",
+      "state": "parsed",
+      "results": 1
+    },
+    {
+      "ms": 833,
+      "query": "ubuntu",
+      "id": "3MAG",
+      "state": "parsed",
+      "results": 29
+    },
+    {
+      "ms": 660,
+      "query": "ubuntu",
+      "id": "BTMOVI",
+      "state": "parsed",
+      "results": 10
+    },
+    {
+      "ms": 266,
+      "query": "ubuntu",
+      "id": "ECLSO",
+      "state": "parsed",
+      "results": 10
+    },
+    {
+      "ms": 557,
+      "query": "ubuntu",
+      "id": "ECLZZ",
+      "state": "parsed",
+      "results": 10
+    },
+    {
+      "ms": 536,
+      "query": "ubuntu",
+      "id": "bitsearch",
+      "state": "parsed",
+      "results": 20
+    },
+    {
+      "ms": 1575,
+      "query": "python",
+      "id": "pansou_public",
+      "state": "parsed",
+      "results": 127
+    },
+    {
+      "ms": 1435,
+      "query": "蜘蛛侠",
+      "id": "aipan",
+      "state": "parsed",
+      "results": 109
+    }
+  ]
+}

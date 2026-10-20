@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "updated": "2026-10-19",
+  "version": 2,
+  "updated": "2026-10-20",
   "sources": [
     {
       "id": "pansearch",
@@ -9,7 +9,7 @@
       "parser": "pansearch",
       "prefix": "https://www.pansearch.me/search?keyword=",
       "enabled": true,
-      "note": "云端已取得百度／夸克／阿里分享链接；分页每页10条索引记录"
+      "note": "2026-10-20 已实测并取得可解析结果；手机网络可用性仍可能不同。"
     },
     {
       "id": "nyaa",
@@ -19,7 +19,7 @@
       "prefix": "https://nyaa.si/?f=0&c=0_0&q=",
       "middle": "&p=",
       "enabled": true,
-      "note": "云端已取得搜索结果；国际来源，受手机网络影响"
+      "note": "2026-10-20 已实测并取得可解析结果；手机网络可用性仍可能不同。"
     },
     {
       "id": "1024BT",
@@ -32,8 +32,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "2048BT",
@@ -46,8 +46,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "3MAG",
@@ -61,7 +61,7 @@
       "singlePage": true,
       "adult": false,
       "enabled": true,
-      "note": "云端已取得搜索结果（2026-10-19），手机网络需实测"
+      "note": "2026-10-20 已实测并取得可解析结果；手机网络可用性仍可能不同。"
     },
     {
       "id": "52BT",
@@ -74,8 +74,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "91BT",
@@ -88,8 +88,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "BAIKE",
@@ -102,8 +102,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "BTMY",
@@ -116,8 +116,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "BTMOVI",
@@ -131,7 +131,7 @@
       "singlePage": false,
       "adult": false,
       "enabled": true,
-      "note": "云端已取得搜索结果（2026-10-19），手机网络需实测"
+      "note": "2026-10-20 已实测并取得可解析结果；手机网络可用性仍可能不同。 此旧站仅HTTP，建议优先使用HTTPS来源。"
     },
     {
       "id": "CIHU",
@@ -144,8 +144,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CILICHI",
@@ -155,11 +155,11 @@
       "prefix": "https://www.cilichi.shop/cilichi/",
       "middle": "_",
       "suffix": "_id.html",
-      "charset": "Utf8-16",
+      "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CILIGEGE",
@@ -172,8 +172,8 @@
       "charset": "UTF-8",
       "singlePage": true,
       "adult": false,
-      "enabled": true,
-      "note": "云端先取得页面，随后实时查询 HTTP 404；历史探测失败，当前按全源模式尝试，保留 Nuxt 解析器"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 404: Not Found；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CILIGUI",
@@ -183,11 +183,11 @@
       "prefix": "https://www.ciligui.homes/magnet_search/",
       "middle": "-",
       "suffix": "-id.html",
-      "charset": "Utf8-16",
+      "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CILIKAN",
@@ -197,11 +197,11 @@
       "prefix": "https://www.cilikan.buzz/cilikan/",
       "middle": "-",
       "suffix": "-id.html",
-      "charset": "Utf8-16",
+      "charset": "UTF-8",
       "singlePage": true,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLB",
@@ -214,8 +214,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLD",
@@ -228,8 +228,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLG",
@@ -242,8 +242,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLGOU",
@@ -256,8 +256,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLM",
@@ -270,8 +270,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLMMBT",
@@ -284,8 +284,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLS",
@@ -298,8 +298,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLTT",
@@ -312,8 +312,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLTTT",
@@ -326,8 +326,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "CLZZ",
@@ -340,8 +340,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "ECLSO",
@@ -355,7 +355,7 @@
       "singlePage": false,
       "adult": false,
       "enabled": true,
-      "note": "云端已取得搜索结果（2026-10-19），手机网络需实测"
+      "note": "2026-10-20 已实测并取得可解析结果；手机网络可用性仍可能不同。 此旧站仅HTTP，建议优先使用HTTPS来源。"
     },
     {
       "id": "ECLZZ",
@@ -369,7 +369,7 @@
       "singlePage": false,
       "adult": false,
       "enabled": true,
-      "note": "云端已取得搜索结果（2026-10-19），手机网络需实测"
+      "note": "2026-10-20 已实测并取得可解析结果；手机网络可用性仍可能不同。 此旧站仅HTTP，建议优先使用HTTPS来源。"
     },
     {
       "id": "U9A9",
@@ -382,8 +382,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 503: Service Unavailable；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 503: Service Unavailable；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "XCCL",
@@ -396,8 +396,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 503: Service Unavailable；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 503: Service Unavailable；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "YHG",
@@ -410,8 +410,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 403: Forbidden；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 403: Forbidden；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "YHG2",
@@ -424,8 +424,8 @@
       "charset": "UTF-8",
       "singlePage": false,
       "adult": false,
-      "enabled": true,
-      "note": "云端探测：HTTP Error 410: Gone；历史探测失败，当前按全源模式尝试，手机网络可能不同"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 410: Gone；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "sukebei",
@@ -445,8 +445,8 @@
       "parser": "qupansou",
       "prefix": "https://v.funletu.com/search",
       "singlePage": false,
-      "enabled": true,
-      "note": "云端探测 HTTP 503，历史探测失败，当前按全源模式尝试"
+      "enabled": false,
+      "note": "历史来源，默认停用。HTTP Error 503: Service Unavailable；可手动试用，403或代理限制不代表所有地区永久失效。"
     },
     {
       "id": "jikepan",
@@ -455,8 +455,39 @@
       "parser": "jikepan",
       "prefix": "https://api.jikepan.xyz/search",
       "singlePage": true,
+      "enabled": false,
+      "note": "历史来源，默认停用。<urlopen error Tunnel connection failed: 403 Forbidden>；可手动试用，403或代理限制不代表所有地区永久失效。"
+    },
+    {
+      "id": "bitsearch",
+      "name": "Bitsearch",
+      "kind": "bt",
+      "parser": "bitsearch",
+      "prefix": "https://bitsearch.eu/search?q=",
+      "middle": "&page=",
       "enabled": true,
-      "note": "当前云端代理无法访问；历史探测失败，当前按全源模式尝试"
+      "note": "2026-10-20 已验证真实磁链、翻页和随机词无结果；国际来源受本地网络影响。"
+    },
+    {
+      "id": "pansou_public",
+      "name": "PanSou 公共聚合",
+      "kind": "pan",
+      "parser": "pansou",
+      "prefix": "https://so.252035.xyz/api/search?res=merge&src=tg&kw=",
+      "singlePage": true,
+      "enabled": true,
+      "note": "2026-10-20 Python取得127条多网盘记录，随机词返回0；第三方聚合服务，部分关键词受服务限制，冷查询可能超时。"
+    },
+    {
+      "id": "aipan",
+      "name": "爱盼影视",
+      "kind": "pan",
+      "parser": "aipan",
+      "prefix": "https://www.aipan.me/api/movies/search?q=",
+      "enabled": true,
+      "note": "2026-10-20 已验证蜘蛛侠搜索与详情真实网盘／磁链；每批最多5个影视条目，不保证所有关键词都有资源。"
     }
-  ]
+  ],
+  "schema": 1,
+  "engine": 2
 }
