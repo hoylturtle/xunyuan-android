@@ -1,6 +1,6 @@
 {
-  "version": "0.5.0",
-  "versionCode": 9,
+  "version": "0.5.1",
+  "versionCode": 10,
   "name": "寻源",
   "github": "https://github.com/hoylturtle/xunyuan-android",
   "checks": 239,
@@ -9,14 +9,14 @@
   "deviceTested": false,
   "updateManifest": "https://github.com/hoylturtle/xunyuan-android/releases/latest/download/update.json",
   "initialReleasePublished": true,
-  "apkSha256": "9dfead0d01ebd978d33da6d9123d04d50555fca535e0f4978cf636bd3a547cf0",
+  "apkSha256": "cc818119bdeabb6c6995ab01d7e9eb6c57df5707a573e8702ac0ca929583c0f0",
   "publicUpdateEndpointVerified": true,
-  "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/v0.5.0",
+  "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/v0.5.1",
   "automaticSigningSecretConfigured": false,
   "androidEmulatorTested": true,
   "androidEmulatorApi": 30,
   "physicalDeviceTested": false,
-  "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39386475146",
+  "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39388117727",
   "hiddenToggleEmulatorTested": true,
   "windows": {
     "version": "0.3.0",
@@ -58,5 +58,8 @@
   "sourceRollbackSupported": true,
   "customSourcesPreserved": true,
   "defaultSourceLiveAudit": "research/live-source-refresh.json",
-  "sourceCatalogPublished": true
+  "sourceCatalogPublished": true,
+  "sourceActionSpacingVerified": true,
+  "sourceActionGapDp": 12,
+  "sourceActionHeightDp": 48
 }
