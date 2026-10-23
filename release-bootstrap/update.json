@@ -1,8 +1,8 @@
 {
-  "versionCode": 10,
-  "versionName": "0.5.1",
-  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.5.1/Xunyuan-0.5.1.apk",
-  "sha256": "cc818119bdeabb6c6995ab01d7e9eb6c57df5707a573e8702ac0ca929583c0f0",
-  "apkSize": 238185,
-  "notes": "修复来源页检查更新、回退按钮贴合的问题，增加按钮高度、间距及状态文字留白。"
+  "versionCode": 11,
+  "versionName": "0.5.2",
+  "apkUrl": "https://github.com/hoylturtle/xunyuan-android/releases/download/v0.5.2/Xunyuan-0.5.2.apk",
+  "sha256": "254a3c9da54ca9d5d1388e8d98ce2e73b05306b0272e81b10e79aa3104fc7b2c",
+  "apkSize": 242281,
+  "notes": "支持从 xcili 等资源详情页提取完整磁力链接；复制和打开使用真实磁链，保留原网页及收藏备注。"
 }

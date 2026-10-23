@@ -2,7 +2,7 @@ plugins { id 'com.android.application' }
 android {
     namespace 'com.btsou.search'
     compileSdk 35
-    defaultConfig { applicationId 'com.btsou.search'; minSdk 26; targetSdk 35; versionCode 6; versionName '0.3.2' }
+    defaultConfig { applicationId 'com.btsou.search'; minSdk 26; targetSdk 35; versionCode 11; versionName '0.5.2' }
     compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
 }
 dependencies { implementation files('libs/jsoup-1.18.3.jar') }

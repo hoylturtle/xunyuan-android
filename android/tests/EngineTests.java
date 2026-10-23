@@ -9,6 +9,12 @@ public final class EngineTests {
     static String read(Path p)throws Exception{return new String(Files.readAllBytes(p),"UTF-8");}
     public static void main(String[] args)throws Exception{
         Path root=Paths.get(args[0]);List<Source> sources=Source.read(read(root.resolve("android/app/src/main/assets/sources.json")));
+        String detail=SearchEngine.extractMagnet(read(root.resolve("research/probes/xcili-kN0z.html")),"https://xcili.net/!kN0z");
+        check(detail.startsWith("magnet:?xt=urn:btih:4c07d16365a05dde152115f1206d214ba7de1187"),"xcili primary input magnet");
+        check(detail.contains("&dn=")&&detail.contains("&xl=17719868050&")&&!detail.contains("&amp;"),"full magnet preserved and HTML decoded");
+        boolean badPrimary=false;try{SearchEngine.extractMagnet("<input id=input-magnet value=invalid><a href='"+detail+"'>related</a>","https://xcili.net/");}catch(java.io.IOException expected){badPrimary=true;}check(badPrimary,"invalid primary must not copy related magnet");
+        check(SearchEngine.extractMagnet("<input readonly value='"+detail.replace("&","&amp;")+"'>","https://example.com/").equals(detail),"readonly value supported");
+        check(SearchEngine.extractMagnet("<a href='"+detail.replace("&","&amp;")+"'>copy</a>","https://example.com/").equals(detail),"existing anchors still supported");
         Map<String,Source> by=new HashMap<>();for(Source s:sources)by.put(s.id,s);
         check(sources.size()==37,"source count");
         check(sources.stream().filter(s->s.defaultEnabled&&!s.adult).count()==9,"only tested ordinary sources enabled; adult gate remains separate");

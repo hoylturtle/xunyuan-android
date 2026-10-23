@@ -178,8 +178,19 @@ public final class SearchEngine {
     private static String humanSize(String s){try{double n=Double.parseDouble(s);String[] u={"B","KB","MB","GB","TB"};int k=0;while(n>=1024&&k<4){n/=1024;k++;}return String.format(Locale.ROOT,"%.2f %s",n,u[k]);}catch(Exception e){return s;}}
     public static String resolveMagnet(Result r)throws Exception{
         if(r.url.startsWith("magnet:"))return r.url;
-        Document d=Jsoup.parse(request(r.url,null,r.pageUrl,"UTF-8"),r.url);Element a=d.selectFirst("a[href^=magnet:]");
-        if(a!=null&&Result.safeUrl(a.attr("href")))return a.attr("href");
+        return extractMagnet(request(r.url,null,r.pageUrl,"UTF-8"),r.url);
+    }
+    public static String extractMagnet(String html,String pageUrl)throws IOException{
+        Document d=Jsoup.parse(html,pageUrl);
+        if(d.title().contains("安全验证")||html.toLowerCase(Locale.ROOT).contains("cf-chl-"))throw new IOException("详情页需要浏览器验证");
+        Element primary=d.getElementById("input-magnet");
+        if(primary!=null){String value=primary.val().trim();if(validMagnet(value))return value;throw new IOException("页面主磁链无效，未使用相关推荐链接");}
+        for(Element el:d.select(".magnet-box input, .magnet-box textarea, input[readonly], textarea[readonly], [data-clipboard-text], a[href^=magnet:]")){
+            boolean related=false;for(Element parent=el;parent!=null;parent=parent.parent())if(parent.is("aside,nav,.related,#related,.recommend,#recommend")){related=true;break;}if(related)continue;
+            String value=(el.hasAttr("data-clipboard-text")?el.attr("data-clipboard-text"):el.hasAttr("href")?el.attr("href"):el.val()).trim();
+            if(validMagnet(value))return value;
+        }
         throw new IOException("详情页未返回磁链，可在浏览器中查看");
     }
+    private static boolean validMagnet(String value){return value.regionMatches(true,0,"magnet:",0,7)&&Result.safeUrl(value);}
 }
