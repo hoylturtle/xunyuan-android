@@ -1,22 +1,22 @@
 {
-  "version": "0.5.1",
-  "versionCode": 10,
+  "version": "0.5.2",
+  "versionCode": 11,
   "name": "寻源",
   "github": "https://github.com/hoylturtle/xunyuan-android",
-  "checks": 239,
+  "checks": 244,
   "androidMin": 26,
   "androidTarget": 35,
   "deviceTested": false,
   "updateManifest": "https://github.com/hoylturtle/xunyuan-android/releases/latest/download/update.json",
   "initialReleasePublished": true,
-  "apkSha256": "cc818119bdeabb6c6995ab01d7e9eb6c57df5707a573e8702ac0ca929583c0f0",
+  "apkSha256": "254a3c9da54ca9d5d1388e8d98ce2e73b05306b0272e81b10e79aa3104fc7b2c",
   "publicUpdateEndpointVerified": true,
-  "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/v0.5.1",
+  "releaseUrl": "https://github.com/hoylturtle/xunyuan-android/releases/tag/v0.5.2",
   "automaticSigningSecretConfigured": false,
   "androidEmulatorTested": true,
   "androidEmulatorApi": 30,
   "physicalDeviceTested": false,
-  "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39388117727",
+  "uiRun": "https://github.com/hoylturtle/xunyuan-android/actions/runs/39914864400",
   "hiddenToggleEmulatorTested": true,
   "windows": {
     "version": "0.4.0",
@@ -69,5 +69,7 @@
   "sourceCatalogPublished": true,
   "sourceActionSpacingVerified": true,
   "sourceActionGapDp": 12,
-  "sourceActionHeightDp": 48
+  "sourceActionHeightDp": 48,
+  "detailPageMagnetExtraction": true,
+  "detailMagnetFixture": "research/probes/xcili-kN0z.html"
 }
