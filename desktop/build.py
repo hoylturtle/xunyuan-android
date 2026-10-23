@@ -3,7 +3,7 @@
 import argparse,hashlib,os,pathlib,shutil,subprocess,sys,json,zipfile
 root=pathlib.Path(__file__).resolve().parent.parent
 out=root/'desktop/build';classes=out/'classes';app=out/'app'
-VERSION='0.3.1'
+VERSION='0.4.0'
 
 def run(*args):
     subprocess.run([str(x) for x in args],check=True,cwd=root)
@@ -30,6 +30,7 @@ def main():
     (classes/'fixtures').mkdir()
     for n in ['pansearch','nyaa','3MAG','BTMOVI','ECLSO','ECLZZ','bitsearch','bitsearch_page2','bitsearch_empty','pansou_python','pansou_empty_retry','aipan','aipan_empty']:shutil.copy2(root/('research/probes/'+n+'.txt'),classes/'fixtures'/(n+'.txt'))
     shutil.copy2(root/'research/probes/aipan_details.json',classes/'fixtures/aipan_details.json')
+    shutil.copy2(root/'research/probes/xcili-kN0z.html',classes/'fixtures/xcili-kN0z.html')
     manifest=out/'MANIFEST.MF';manifest.write_text('Manifest-Version: 1.0\nMain-Class: com.btsou.search.DesktopApp\nClass-Path: jsoup-1.18.3.jar json-20240303.jar\n\n')
     run(tool('jar'),'--create','--file',app/'Xunyuan.jar','--manifest',manifest,'-C',classes,'.')
     for p in deps:shutil.copy2(p,app/p.name)

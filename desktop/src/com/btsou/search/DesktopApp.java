@@ -15,7 +15,7 @@ import org.json.*;
 
 /** Desktop shell; Source, Result and SearchEngine are shared with Android. */
 public final class DesktopApp {
-    public static final String VERSION="0.3.1";
+    public static final String VERSION="0.4.0";
     private static final Color BG=new Color(246,248,245),GREEN=new Color(35,105,80),INK=new Color(30,47,39),MUTED=new Color(103,119,109);
     private final JTabbedPane tabs=new JTabbedPane();
     private final JFrame frame=new JFrame("寻源 · Windows "+VERSION);
@@ -29,6 +29,10 @@ public final class DesktopApp {
     private JSONObject settings=new JSONObject();
     private javax.swing.SwingWorker<Void,Void> favoriteCheck;
     private final JButton checkFavorites=new JButton("复检收藏");
+    private int detailEpoch=0,copySerial=0;
+    private final Set<SwingWorker<?,?>> detailWorkers=new HashSet<>();
+    private final Set<JDialog> detailWindows=new HashSet<>();
+    private final Map<String,ResourceDetails> detailCache=new LinkedHashMap<String,ResourceDetails>(32,.75f,true){protected boolean removeEldestEntry(Map.Entry<String,ResourceDetails> e){return size()>64;}};
     private boolean adultEnabled=false;
     private final TapSequence titleTaps=new TapSequence();
     private final JLabel title=new JLabel("寻源");
@@ -63,7 +67,7 @@ public final class DesktopApp {
         java.util.List<Image> icons=new ArrayList<>();for(int size:new int[]{16,32,48,128,256}){java.net.URL icon=getClass().getResource("/icons/icon-"+size+".png");if(icon!=null)icons.add(javax.imageio.ImageIO.read(icon));}frame.setIconImages(icons);
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         frame.setMinimumSize(new Dimension(1000,640));frame.setSize(1080,780);frame.setLocationRelativeTo(null);
-        frame.addWindowListener(new WindowAdapter(){public void windowClosed(WindowEvent e){generation.incrementAndGet();if(favoriteCheck!=null)favoriteCheck.cancel(true);if(sourceUpdate!=null)sourceUpdate.cancel(true);engine.close();}});
+        frame.addWindowListener(new WindowAdapter(){public void windowClosed(WindowEvent e){generation.incrementAndGet();if(favoriteCheck!=null)favoriteCheck.cancel(true);if(sourceUpdate!=null)sourceUpdate.cancel(true);cancelDetails();engine.close();}});
         JPanel root=new JPanel(new BorderLayout(0,16));root.setBackground(BG);root.setBorder(new EmptyBorder(24,28,20,28));frame.setContentPane(root);
         JPanel header=new JPanel(new BorderLayout());header.setOpaque(false);
         title.setFont(title.getFont().deriveFont(Font.BOLD,30f));title.setForeground(GREEN);
@@ -73,8 +77,7 @@ public final class DesktopApp {
         tabs.addTab("搜索",searchPanel());tabs.addTab("收藏",favoritesPanel());tabs.addTab("搜索来源",sourcesPanel());tabs.addTab("关于",aboutPanel());root.add(tabs,BorderLayout.CENTER);
         status.setForeground(MUTED);root.add(status,BorderLayout.SOUTH);
         readFavorites();paintFavorites();
-        resultList.addMouseListener(new MouseAdapter(){public void mouseClicked(MouseEvent e){if(e.getClickCount()==2)openSelected(resultList);}});
-        favoriteList.addMouseListener(new MouseAdapter(){public void mouseClicked(MouseEvent e){if(e.getClickCount()==2)openSelected(favoriteList);}});
+        installResultActions(resultList);installResultActions(favoriteList);
         query.addActionListener(e->startSearch());search.addActionListener(e->startSearch());
         filter.addActionListener(e->refilter());onlyWithCode.addActionListener(e->refilter());
         previous.addActionListener(e->{if(displayPage>0){displayPage--;paintResults();}});
@@ -91,7 +94,7 @@ public final class DesktopApp {
         if(!titleTaps.tap(System.nanoTime()))return;
         if(!adultEnabled&&!confirmAdult.getAsBoolean())return;
         if(favoriteCheck!=null)favoriteCheck.cancel(true);
-        adultEnabled=!adultEnabled;
+        cancelDetails();adultEnabled=!adultEnabled;
         generation.incrementAndGet();engine.cancel();loading=false;pending=0;browsing=false;
         activeAdult=false;activeQuery="";query.setText("");diagnostics.setText("");
         collected.clear();visible.clear();within.setText("");exclude.setText("");favoriteQuery.setText("");displayPage=0;paintResults();paintFavorites();refreshHistory();search.setEnabled(true);
@@ -164,9 +167,36 @@ public final class DesktopApp {
     private void saveSelected(){Result r=resultList.getSelectedValue();if(r!=null){Result old=favorites.get(r.key());if(old!=null){r.collectionGroup=old.collectionGroup;r.note=old.note;}favorites.put(r.key(),r);writeFavorites();paintFavorites();status.setText("已收藏："+r.title);}}
     private void readFavorites(){try{if(Files.exists(dataPath)){JSONArray a=new JSONArray(Files.readString(dataPath));for(int i=0;i<a.length();i++){Result r=Result.from(a.getJSONObject(i));if(Result.safeUrl(r.url))favorites.put(r.key(),r);}}}catch(Exception e){status.setText("收藏读取失败："+e.getMessage());}}
     private void writeFavorites(){try{Files.createDirectories(dataPath.getParent());JSONArray a=new JSONArray();for(Result r:favorites.values())a.put(r.json());Path tmp=dataPath.resolveSibling("favorites.json.tmp");Files.writeString(tmp,a.toString(2),StandardCharsets.UTF_8);Files.move(tmp,dataPath,StandardCopyOption.REPLACE_EXISTING);}catch(Exception e){JOptionPane.showMessageDialog(frame,"收藏保存失败："+e.getMessage());}}
-    private void copySelected(JList<Result> list){Result r=list.getSelectedValue();if(r!=null){copy(r.url+(r.password.isEmpty()?"":"\n提取码："+r.password));status.setText(r.kind.equals("bt")||!r.password.isEmpty()?"链接及已知提取码已复制":"链接已复制；来源未提供提取码，可查看来源页");}}
+    private boolean allowed(Result r){return r!=null&&r.visible(adultEnabled);}
+    private void installResultActions(JList<Result> list){
+        list.addMouseListener(new MouseAdapter(){
+            private void popup(MouseEvent e){if(!e.isPopupTrigger())return;int index=list.locationToIndex(e.getPoint());if(index<0||!list.getCellBounds(index,index).contains(e.getPoint()))return;list.setSelectedIndex(index);JPopupMenu menu=resultMenu(list);menu.show(list,e.getX(),e.getY());}
+            public void mousePressed(MouseEvent e){popup(e);}public void mouseReleased(MouseEvent e){popup(e);}
+            public void mouseClicked(MouseEvent e){if(SwingUtilities.isLeftMouseButton(e)&&e.getClickCount()==2){int index=list.locationToIndex(e.getPoint());if(index>=0&&list.getCellBounds(index,index).contains(e.getPoint())){list.setSelectedIndex(index);showSelectedDetails(list);}}}
+        });
+        list.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C,InputEvent.CTRL_DOWN_MASK),"copyResource");list.getActionMap().put("copyResource",new AbstractAction(){public void actionPerformed(ActionEvent e){copySelected(list);}});
+        list.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0),"resourceDetails");list.getActionMap().put("resourceDetails",new AbstractAction(){public void actionPerformed(ActionEvent e){showSelectedDetails(list);}});
+    }
+    private JPopupMenu resultMenu(JList<Result> list){JPopupMenu menu=new JPopupMenu();Result r=list.getSelectedValue();JMenuItem copyLink=new JMenuItem(r!=null&&r.kind.equals("bt")?"复制磁力链接":"复制链接及提取码");copyLink.addActionListener(e->copyResult(r));menu.add(copyLink);JMenuItem details=new JMenuItem("查看详情");details.addActionListener(e->showDetails(r));menu.add(details);JMenuItem open=new JMenuItem("打开资源");open.addActionListener(e->openResult(r));menu.add(open);JMenuItem page=new JMenuItem("打开原网页");page.addActionListener(e->{if(allowed(r))openAddress(originalPage(r));});page.setEnabled(r!=null&&!originalPage(r).isEmpty());menu.add(page);return menu;}
+    private String originalPage(Result r){return r.kind.equals("bt")&&!ResourceDetails.magnet(r.url)?r.url:Result.safeUrl(r.pageUrl)?r.pageUrl:!r.kind.equals("bt")?r.url:"";}
+    private ResourceDetails cachedDetails(Result r){ResourceDetails d=detailCache.get(r.url);if(d==null&&!ResourceDetails.magnet(r.url)&&!r.pageUrl.isEmpty())d=detailCache.get(r.pageUrl);return d;}
+    private void resolveDetails(Result r,java.util.function.Consumer<ResourceDetails> ready,java.util.function.Consumer<Exception> failed){
+        if(!allowed(r))return;ResourceDetails cached=cachedDetails(r);if(cached!=null){if(adultEnabled||!Result.adultText(cached.title)){rememberDetails(r,cached);ready.accept(cached);}else failed.accept(new Exception("普通模式已过滤该详情内容"));return;}
+        if(!r.kind.equals("bt")||ResourceDetails.magnet(r.url)){ready.accept(ResourceDetails.known(r));return;}
+        final int epoch=detailEpoch;final String page=r.url;final Result snapshot=new Result();snapshot.url=r.url;snapshot.pageUrl=r.pageUrl;snapshot.title=r.title;snapshot.size=r.size;snapshot.date=r.date;snapshot.kind=r.kind;status.setText("正在读取详情并提取磁链…");
+        SwingWorker<ResourceDetails,Void> worker=new SwingWorker<ResourceDetails,Void>(){protected ResourceDetails doInBackground()throws Exception{return ResourceDetails.load(snapshot);}protected void done(){detailWorkers.remove(this);if(isCancelled()||epoch!=detailEpoch||!allowed(r))return;try{ResourceDetails d=get();if(!adultEnabled&&Result.adultText(d.title)){failed.accept(new Exception("普通模式已过滤该详情内容"));return;}detailCache.put(page,d);rememberDetails(r,d);status.setText("资源详情已读取");ready.accept(d);}catch(Exception e){Throwable cause=e.getCause();failed.accept(cause instanceof Exception?(Exception)cause:e);}}};detailWorkers.add(worker);worker.execute();
+    }
+    private void rememberDetails(Result r,ResourceDetails d){if(!ResourceDetails.magnet(d.magnet))return;detailCache.put(d.magnet,d);if(!d.pageUrl.isEmpty())detailCache.put(d.pageUrl,d);ResourceDetails.promote(r,d,collected,favorites);writeFavorites();refreshCollected();paintFavorites();}
+    private void copySelected(JList<Result> list){copyResult(list.getSelectedValue());}
+    private void copyResult(Result r){if(!allowed(r))return;final int serial=++copySerial;resolveDetails(r,d->{if(serial!=copySerial)return;copy((r.kind.equals("bt")?d.magnet:r.url)+(r.password.isEmpty()?"":"\n提取码："+r.password));status.setText(r.kind.equals("bt")?"磁力链接已复制":"链接及已知提取码已复制");},e->{if(serial==copySerial){status.setText("磁链提取失败："+SearchEngine.message(e));JOptionPane.showMessageDialog(frame,"未复制网页地址冒充磁链。\n"+SearchEngine.message(e)+"\n可使用右键菜单打开原网页。");}});}
     private void copy(String value){Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(value),null);}
-    private void openSelected(JList<Result> list){Result r=list.getSelectedValue();if(r!=null){if(!r.password.isEmpty())copy(r.password);openAddress(r.url);}}
+    private void openSelected(JList<Result> list){openResult(list.getSelectedValue());}
+    private void openResult(Result r){if(!allowed(r))return;resolveDetails(r,d->{if(!r.password.isEmpty())copy(r.password);openAddress(r.kind.equals("bt")?d.magnet:r.url);},e->JOptionPane.showMessageDialog(frame,"提取失败："+SearchEngine.message(e)+"。可右键打开原网页。"));}
+    private void showSelectedDetails(JList<Result> list){showDetails(list.getSelectedValue());}
+    private void showDetails(Result r){if(!allowed(r))return;JDialog dialog=new JDialog(frame,"资源详情",false);dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);dialog.setSize(760,560);dialog.setLocationRelativeTo(frame);JPanel panel=new JPanel(new BorderLayout(10,10));panel.setBorder(new EmptyBorder(16,16,16,16));JTextArea text=new JTextArea("正在读取详情…");text.setEditable(false);text.setLineWrap(true);text.setWrapStyleWord(true);panel.add(new JScrollPane(text),BorderLayout.CENTER);JPanel actions=new JPanel(new FlowLayout(FlowLayout.LEFT));JButton copyLink=new JButton(r.kind.equals("bt")?"复制磁力链接":"复制链接及提取码"),open=new JButton("打开资源"),origin=new JButton("打开原网页");copyLink.setEnabled(false);open.setEnabled(false);String page=originalPage(r);origin.setEnabled(!page.isEmpty());origin.addActionListener(e->{if(allowed(r))openAddress(page);});actions.add(copyLink);actions.add(open);actions.add(origin);panel.add(actions,BorderLayout.SOUTH);dialog.setContentPane(panel);detailWindows.add(dialog);dialog.addWindowListener(new WindowAdapter(){public void windowClosed(WindowEvent e){detailWindows.remove(dialog);}});dialog.setVisible(true);
+        resolveDetails(r,d->{if(!dialog.isDisplayable())return;StringBuilder content=new StringBuilder(d.title).append("\n\n来源：").append(r.source).append("\n大小：").append(d.size.isEmpty()?"未提供":d.size).append("\n日期：").append(d.date.isEmpty()?"未提供":d.date);if(!r.password.isEmpty())content.append("\n提取码：").append(r.password);content.append("\n\n").append(r.kind.equals("bt")?"磁力链接：\n"+d.magnet:"网盘链接：\n"+r.url);if(!d.files.isEmpty()){content.append("\n\n文件列表（最多500项）：\n");for(String file:d.files)content.append(file).append("\n");}else content.append("\n\n当前来源未提供可读取的文件列表。");text.setText(content.toString());text.setCaretPosition(0);copyLink.setEnabled(true);open.setEnabled(true);copyLink.addActionListener(e->{++copySerial;copy((r.kind.equals("bt")?d.magnet:r.url)+(r.password.isEmpty()?"":"\n提取码："+r.password));status.setText("链接已复制");});open.addActionListener(e->{if(!r.password.isEmpty())copy(r.password);openAddress(r.kind.equals("bt")?d.magnet:r.url);});},e->{if(dialog.isDisplayable())text.setText(r.title+"\n\n详情读取失败："+SearchEngine.message(e)+"\n可打开原网页查看。");});
+    }
+    private void cancelDetails(){detailEpoch++;copySerial++;for(SwingWorker<?,?> worker:new ArrayList<>(detailWorkers))worker.cancel(true);detailWorkers.clear();for(JDialog dialog:new ArrayList<>(detailWindows))dialog.dispose();detailWindows.clear();}
     private void openAddress(String address){try{if(!Result.safeUrl(address))throw new Exception("地址无效");Desktop.getDesktop().browse(new URI(address));}catch(Exception e){copy(address);JOptionPane.showMessageDialog(frame,"没有可用的关联应用或打开失败。地址已复制，可粘贴到浏览器或下载工具。\n"+e.getMessage());}}
     private void applySourceDefaults(){if(settings.optLong("sourceDefaultsVersion",0)>=officialCatalog.version)return;try{for(Source s:officialCatalog.sources)if(!s.defaultEnabled&&!s.adult)settings.put("source:"+s.id,false);settings.put("sourceDefaultsVersion",officialCatalog.version);saveSettings();}catch(Exception e){status.setText("来源默认开关保存失败");}}
     private void saveCatalogFile(String name,String raw)throws Exception{Files.createDirectories(dataPath.getParent());Path target=dataPath.resolveSibling(name),tmp=dataPath.resolveSibling(name+".tmp");Files.writeString(tmp,raw,StandardCharsets.UTF_8);Files.move(tmp,target,StandardCopyOption.REPLACE_EXISTING);}
@@ -222,6 +252,20 @@ public final class DesktopApp {
         for(String type:new String[]{"电影","电视剧","电子书","软件"}){category.setSelectedItem(type);if(visible.size()!=1)throw new AssertionError("Category UI: "+type);}
         category.setSelectedItem("不限制");if(visible.size()!=31)throw new AssertionError("Category must restore rows");
         within.setText("蜘蛛侠");if(visible.size()!=1)throw new AssertionError("Within results UI");exclude.setText("1080");if(!visible.isEmpty())throw new AssertionError("Excluded terms UI");within.setText("");exclude.setText("");order.setSelectedItem("有提取码优先");if(visible.get(0).password.isEmpty())throw new AssertionError("Code sorting UI");order.setSelectedItem("默认顺序");
+        try{
+            ResourceDetails sample=ResourceDetailsTests.sample();Result pageResult=new Result();pageResult.title=sample.title;pageResult.kind="bt";pageResult.url="https://xcili.net/!kN0z";pageResult.source="离线详情测试";
+            detailCache.put(pageResult.url,sample);collected.put(pageResult.key(),pageResult);refilter();resultList.setSelectedValue(pageResult,true);
+            JPopupMenu menu=resultMenu(resultList);((JMenuItem)menu.getComponent(0)).doClick();
+            String clipboard=(String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(java.awt.datatransfer.DataFlavor.stringFlavor);
+            if(!clipboard.equals(sample.magnet)||!collected.containsKey(pageResult.key()))throw new AssertionError("Context menu must copy full resolved magnet");
+            resultList.setSelectedValue(pageResult,true);int row=resultList.getSelectedIndex();Rectangle bounds=resultList.getCellBounds(row,row);
+            resultList.dispatchEvent(new MouseEvent(resultList,MouseEvent.MOUSE_CLICKED,System.currentTimeMillis(),0,bounds.x+5,bounds.y+5,2,false,MouseEvent.BUTTON1));
+            if(detailWindows.size()!=1)throw new AssertionError("Double click must open detail dialog");
+            JDialog detail=detailWindows.iterator().next();JScrollPane scroll=(JScrollPane)detail.getContentPane().getComponent(0);String content=((JTextArea)scroll.getViewport().getView()).getText();
+            if(!content.contains(sample.magnet)||!content.contains(sample.files.get(0))||content.contains("MRSS-191J"))throw new AssertionError("Detail must show main files and exclude related resources");
+            cancelDetails();if(!detailWindows.isEmpty())throw new AssertionError("Detail windows must close");collected.remove(pageResult.key());refilter();
+            System.out.println("RESOURCE_DETAILS_UI_OK contextCopy=true doubleClick=true mainFiles=true");
+        }catch(Exception ex){throw new RuntimeException(ex);}
         status.setText("离线界面测试 · 31条样本 · 扩展搜索默认关闭");
         new javax.swing.Timer(1500,e->{try{java.awt.image.BufferedImage shot=new Robot().createScreenCapture(frame.getBounds());javax.imageio.ImageIO.write(shot,"png",Paths.get("desktop-smoke.png").toFile());System.out.println("DESKTOP_SMOKE_OK");frame.dispose();}catch(Exception ex){ex.printStackTrace();System.exit(1);}((javax.swing.Timer)e.getSource()).stop();}).start();
     }
