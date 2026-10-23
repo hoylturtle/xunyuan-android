@@ -254,7 +254,7 @@ public final class DesktopApp {
         within.setText("蜘蛛侠");if(visible.size()!=1)throw new AssertionError("Within results UI");exclude.setText("1080");if(!visible.isEmpty())throw new AssertionError("Excluded terms UI");within.setText("");exclude.setText("");order.setSelectedItem("有提取码优先");if(visible.get(0).password.isEmpty())throw new AssertionError("Code sorting UI");order.setSelectedItem("默认顺序");
         try{
             ResourceDetails sample=ResourceDetailsTests.sample();Result pageResult=new Result();pageResult.title=sample.title;pageResult.kind="bt";pageResult.url="https://xcili.net/!kN0z";pageResult.source="离线详情测试";
-            detailCache.put(pageResult.url,sample);collected.put(pageResult.key(),pageResult);refilter();resultList.setSelectedValue(pageResult,true);
+            detailCache.put(pageResult.url,sample);collected.put(pageResult.key(),pageResult);refilter();displayPage=visible.indexOf(pageResult)/15;paintResults();resultList.setSelectedValue(pageResult,true);
             JPopupMenu menu=resultMenu(resultList);((JMenuItem)menu.getComponent(0)).doClick();
             String clipboard=(String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(java.awt.datatransfer.DataFlavor.stringFlavor);
             if(!clipboard.equals(sample.magnet)||!collected.containsKey(pageResult.key()))throw new AssertionError("Context menu must copy full resolved magnet");
