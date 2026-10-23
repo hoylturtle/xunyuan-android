@@ -96,7 +96,8 @@ try:
             (dest/name).write_bytes(archive.read(name))
 except Exception:
     pass
-if not (dest/'before-home.png').exists():screens(root/'release-bootstrap/Xunyuan-0.2.0.apk','before')
+# Historical releases may be pruned. Do not launch an obsolete APK whose
+# automatic update prompt can interrupt current-version UI checks.
 new=sorted((root/'android/build').glob('Xunyuan-*.apk'))
 assert new
 screens(new[-1],'after')

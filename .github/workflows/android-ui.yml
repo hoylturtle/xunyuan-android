@@ -39,11 +39,3 @@ jobs:
         with:
           name: Native-Android-UI
           path: ui-captures/
-      - name: Share screenshot archive
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          zip -j ui-captures.zip ui-captures/*
-          gh release view ui-preview > /dev/null 2>&1 || gh release create ui-preview --title '原生安卓界面预览' --notes '模拟器真实截图与布局检查文件。' --prerelease --latest=false
-          gh release upload ui-preview ui-captures.zip --clobber
